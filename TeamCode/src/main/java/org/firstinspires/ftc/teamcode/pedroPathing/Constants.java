@@ -22,13 +22,14 @@ public class Constants {
             .maxPower(1)
             .rightFrontMotorName("rightFront")
             .rightRearMotorName("rightBack")
-            .leftRearMotorName("leftFront")
-            .leftFrontMotorName("leftBack")
+            .leftRearMotorName("leftBack")
+            .leftFrontMotorName("leftFront")
             .leftFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
             .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .xVelocity(55.99729474886196);
+            .xVelocity(63.5)
+            .yVelocity(52.7);
 
     public static PinpointConstants localizerConstants = new PinpointConstants()
             .forwardPodY(-8.26772)
