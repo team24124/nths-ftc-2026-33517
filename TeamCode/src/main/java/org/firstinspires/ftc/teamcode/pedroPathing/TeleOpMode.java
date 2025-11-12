@@ -29,6 +29,11 @@ public class TeleOpMode extends OpMode {
     private DcMotorEx leftBigFlywheel, rightBigFlywheel;
     private CRServo leftSmallFlywheel, rightSmallFlywheel;
 
+    private boolean isRotatingToTarget = false;
+    private double targetHeading = 0;
+    private boolean rightStickPressed = false;
+    private boolean leftStickPressed = false;
+
     @Override
     public void init() {
         follower = Constants.createFollower(hardwareMap);
@@ -61,35 +66,103 @@ public class TeleOpMode extends OpMode {
         follower.update();
         telemetryM.update();
 
-        // Driving
-        follower.setTeleOpDrive(
-                -gamepad1.left_stick_y,
-                -gamepad1.left_stick_x,
-                -gamepad1.right_stick_x * 0.5,
-                true
-        );
+        // Joystick Movement Variables
+        double line = -gamepad1.left_stick_y;
+        double strafe = -gamepad1.left_stick_x;
+        double turn = -gamepad1.right_stick_x * 0.5;
+
+        // Speed of Micro Adjustments
+        double microSpeed = 0.1; // Adjust this (lower = slower)
+
+        // Quick Rotation Angle
+        double quickRotationAngle = 180.0;
+
+        // Micro Movement Control
+        if (gamepad1.dpad_up) {
+            line = microSpeed;
+            strafe = 0.0;
+        } else if (gamepad1.dpad_down) {
+            line = -microSpeed;
+            strafe = 0.0;
+        } else if (gamepad1.dpad_right) {
+            line = 0.0;
+            strafe = -microSpeed;
+        } else if (gamepad1.dpad_left) {
+            line = 0.0;
+            strafe = microSpeed;
+        }
+
+        // Micro Rotation Control
+        if (gamepad1.right_bumper) {
+            turn = -microSpeed;
+        } else if (gamepad1.left_bumper) {
+            turn = microSpeed;
+        }
+
+        // Quick Rotation Control
+        if (gamepad1.right_stick_button && !rightStickPressed && !isRotatingToTarget) {
+            rightStickPressed = true;
+            double currentHeading = Math.toDegrees(follower.getPose().getHeading());
+            targetHeading = Math.toRadians(currentHeading - quickRotationAngle);
+            isRotatingToTarget = true;
+        } else if (!gamepad1.right_stick_button) {
+            rightStickPressed = false;
+        }
+
+        // If rotating to target, override turn control
+        if (isRotatingToTarget) {
+            double currentHeading = follower.getPose().getHeading();
+            double headingError = targetHeading - currentHeading;
+
+            // Normalize error to -PI to PI
+            while (headingError > Math.PI) headingError -= 2 * Math.PI;
+            while (headingError < -Math.PI) headingError += 2 * Math.PI;
+
+            // Stop if close enough (within 1 degree)
+            if (Math.abs(Math.toDegrees(headingError)) < 1.0) {
+                turn = 0;
+                isRotatingToTarget = false;
+            } else {
+                // Proportional control - turn towards target
+                turn = headingError * 0.5; // Adjust multiplier for speed
+            }
+        }
+
+        // Set gamepad controls
+        follower.setTeleOpDrive(line, strafe, turn, true);
 
         // Flywheel Control
         if (gamepad1.right_trigger > 0.1) {
             double power = gamepad1.right_trigger;
-            leftBigFlywheel.setPower(power);
-            rightBigFlywheel.setPower(power);
-            rightSmallFlywheel.setPower(power);
-            leftSmallFlywheel.setPower(power);
+            rotateFlywheel(power);
         } else {
-            leftBigFlywheel.setPower(0);
-            rightBigFlywheel.setPower(0);
-            leftSmallFlywheel.setPower(0);
-            rightSmallFlywheel.setPower(0);
+            rotateFlywheel(0);
         }
 
-        // Debug info
-        telemetry.addData("Trigger Value", gamepad1.right_trigger);
-        telemetry.addData("Left Flywheel Power", leftBigFlywheel.getPower());
-        telemetry.addData("Right Flywheel Power", rightBigFlywheel.getPower());
-        telemetry.addData("position", follower.getPose());
-        telemetry.addData("velocity", follower.getVelocity());
+        telemetryUpdate();
+    }
+
+    private void telemetryUpdate() {
+        // Controls Manual
+        telemetry.addLine("====CONTROLS====");
+        telemetry.addLine("Left Joystick: Movement");
+        telemetry.addLine("Right Joystick: Rotation");
+        telemetry.addLine("Right Joystick Button: Rotate 180 degrees clockwise");
+        telemetry.addLine("Right Trigger: Flywheel");
+        telemetry.addLine("D-Pad: Microadjustments for movement");
+        telemetry.addLine("Left + Right Bumper: Microadjustments for rotation");
+
+        // Info
+        telemetry.addLine("\n====ROBOT INFO====");
+        telemetry.addData("Current Heading (deg)", Math.toDegrees(follower.getPose().getHeading()));
 
         telemetry.update();
+    }
+
+    private void rotateFlywheel(double power) {
+        leftBigFlywheel.setPower(power);
+        rightBigFlywheel.setPower(power);
+        rightSmallFlywheel.setPower(power);
+        leftSmallFlywheel.setPower(power);
     }
 }
