@@ -34,6 +34,13 @@ public class TeleOpMode extends OpMode {
     private boolean rightStickPressed = false;
     private boolean leftStickPressed = false;
 
+    // Speed Adjustments
+    // Speed multiplier (MAX IS 1)
+    double microSpeed = 0.10; // for micro adjustment speed
+    double regularSpeed = 0.80; // for regular movement speed
+    double turnSpeed = 0.50; // for rotation speed
+    double flywheelSpeed = 0.80; // for flywheel speed
+
     @Override
     public void init() {
         follower = Constants.createFollower(hardwareMap);
@@ -66,11 +73,8 @@ public class TeleOpMode extends OpMode {
         follower.update();
         telemetryM.update();
 
-        // Speed Adjustments
-        // Speed multiplier (MAX IS 1)
-        double microSpeed = 0.1; // for micro adjustment speed
-        double regularSpeed = 0.8; // for regular movement speed
-        double turnSpeed = 0.5; // for rotation speed
+        // Movement & Flywheel Adjustments
+        double adjustmentIncrement = 0.05;
 
         // Joystick Movement Variables
         double line = -gamepad1.left_stick_y * regularSpeed;
@@ -142,6 +146,25 @@ public class TeleOpMode extends OpMode {
             rotateFlywheel(0);
         }
 
+        // Speed Adjustment Controls
+        if (gamepad1.xWasPressed()) {
+            if (regularSpeed >= 0.05) {
+                regularSpeed -= 0.05;
+            }
+        } else if (gamepad1.bWasPressed()) {
+            if (regularSpeed <= 1) {
+                regularSpeed += 0.05;
+            }
+        } else if (gamepad1.yWasPressed()) {
+            if (flywheelSpeed <= 1) {
+                flywheelSpeed += 0.05;
+            }
+        } else if (gamepad1.aWasPressed()) {
+            if (flywheelSpeed >= 0.05) {
+                flywheelSpeed -= 0.05;
+            }
+        }
+
         telemetryUpdate();
     }
 
@@ -154,17 +177,24 @@ public class TeleOpMode extends OpMode {
         telemetry.addLine("Right Trigger: Flywheel");
         telemetry.addLine("D-Pad: Microadjustments for movement");
         telemetry.addLine("Left + Right Bumper: Microadjustments for rotation");
+        telemetry.addLine("X: Decrease default movement speed");
+        telemetry.addLine("B: Increase default movement speed");
+        telemetry.addLine("A: Decrease default flywheel speed");
+        telemetry.addLine("Y: Increase default flywheel speed");
 
         // Info
         telemetry.addLine("\n====ROBOT INFO====");
         telemetry.addData("Current Heading (deg)", Math.toDegrees(follower.getPose().getHeading()));
+        telemetry.addData("Movement Speed", regularSpeed);
+        telemetry.addData("Turning Speed", turnSpeed);
+        telemetry.addData("Flywheel Speed", flywheelSpeed);
 
         telemetry.update();
     }
 
     private void rotateFlywheel(double power) {
-        leftBigFlywheel.setPower(power);
-        rightBigFlywheel.setPower(power);
+        leftBigFlywheel.setPower(power * flywheelSpeed);
+        rightBigFlywheel.setPower(power * flywheelSpeed);
         rightSmallFlywheel.setPower(power);
         leftSmallFlywheel.setPower(power);
     }
