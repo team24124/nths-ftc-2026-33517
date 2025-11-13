@@ -66,13 +66,16 @@ public class TeleOpMode extends OpMode {
         follower.update();
         telemetryM.update();
 
-        // Joystick Movement Variables
-        double line = -gamepad1.left_stick_y;
-        double strafe = -gamepad1.left_stick_x;
-        double turn = -gamepad1.right_stick_x * 0.5;
+        // Speed Adjustments
+        // Speed multiplier (MAX IS 1)
+        double microSpeed = 0.1; // for micro adjustment speed
+        double regularSpeed = 0.8; // for regular movement speed
+        double turnSpeed = 0.5; // for rotation speed
 
-        // Speed of Micro Adjustments
-        double microSpeed = 0.1; // Adjust this (lower = slower)
+        // Joystick Movement Variables
+        double line = -gamepad1.left_stick_y * regularSpeed;
+        double strafe = -gamepad1.left_stick_x * regularSpeed;
+        double turn = -gamepad1.right_stick_x * turnSpeed;
 
         // Quick Rotation Angle
         double quickRotationAngle = 180.0;
