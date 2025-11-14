@@ -39,7 +39,7 @@ public class TeleOpMode extends OpMode {
     double microSpeed = 0.10; // for micro adjustment speed
     double regularSpeed = 0.80; // for regular movement speed
     double turnSpeed = 0.50; // for rotation speed
-    double flywheelSpeed = 0.80; // for flywheel speed
+    double flywheelSpeed = 2000; // for flywheel speed
 
     @Override
     public void init() {
@@ -50,7 +50,9 @@ public class TeleOpMode extends OpMode {
 
         // Initialize the flywheels
         leftBigFlywheel = hardwareMap.get(DcMotorEx.class, "leftBigFlywheel");
+        leftBigFlywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightBigFlywheel = hardwareMap.get(DcMotorEx.class, "rightBigFlywheel");
+        rightBigFlywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         leftSmallFlywheel = hardwareMap.get(CRServo.class, "leftSmallFlywheel");
         rightSmallFlywheel = hardwareMap.get(CRServo.class, "rightSmallFlywheel");
 
@@ -164,12 +166,12 @@ public class TeleOpMode extends OpMode {
                 regularSpeed += 0.05;
             }
         } else if (gamepad1.yWasPressed()) {
-            if (flywheelSpeed <= 1) {
-                flywheelSpeed += 0.05;
+            if (flywheelSpeed <= 2400) {
+                flywheelSpeed += 100;
             }
         } else if (gamepad1.aWasPressed()) {
-            if (flywheelSpeed >= 0.05) {
-                flywheelSpeed -= 0.05;
+            if (flywheelSpeed >= 100) {
+                flywheelSpeed -= 100;
             }
         }
 
@@ -196,14 +198,20 @@ public class TeleOpMode extends OpMode {
         telemetry.addData("Current Heading (deg)", Math.toDegrees(follower.getPose().getHeading()));
         telemetry.addData("Movement Speed", regularSpeed);
         telemetry.addData("Turning Speed", turnSpeed);
-        telemetry.addData("Flywheel Speed", flywheelSpeed);
+        telemetry.addData("Flywheel Targeted Velocity ==", flywheelSpeed);
+        telemetry.addData("Flywheel Real-Time Velocity", leftBigFlywheel.getVelocity());
 
         telemetry.update();
     }
 
     private void rotateFlywheel(double power) {
-        leftBigFlywheel.setPower(power * flywheelSpeed);
-        rightBigFlywheel.setPower(power * flywheelSpeed);
+        if (power != 0) {
+            leftBigFlywheel.setVelocity(flywheelSpeed);
+            rightBigFlywheel.setVelocity(flywheelSpeed);
+        } else {
+            leftBigFlywheel.setVelocity(0);
+            rightBigFlywheel.setVelocity(0);
+        }
     }
 
     private void rotateSmallFlywheel(double power) {
