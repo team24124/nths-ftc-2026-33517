@@ -39,7 +39,7 @@ public class TeleOpMode extends OpMode {
     double microSpeed = 0.10; // for micro adjustment speed
     double regularSpeed = 0.80; // for regular movement speed
     double turnSpeed = 0.50; // for rotation speed
-    double flywheelSpeed = 2000; // for flywheel speed
+    double flywheelSpeed = 1300; // for flywheel speed
 
     @Override
     public void init() {
@@ -167,11 +167,11 @@ public class TeleOpMode extends OpMode {
             }
         } else if (gamepad1.yWasPressed()) {
             if (flywheelSpeed <= 2400) {
-                flywheelSpeed += 100;
+                flywheelSpeed += 50;
             }
         } else if (gamepad1.aWasPressed()) {
             if (flywheelSpeed >= 100) {
-                flywheelSpeed -= 100;
+                flywheelSpeed -= 50;
             }
         }
 
