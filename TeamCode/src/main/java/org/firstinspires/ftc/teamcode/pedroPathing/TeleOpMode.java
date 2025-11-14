@@ -138,12 +138,20 @@ public class TeleOpMode extends OpMode {
         // Set gamepad controls
         follower.setTeleOpDrive(line, strafe, turn, true);
 
-        // Flywheel Control
-        if (gamepad1.right_trigger > 0.1) {
-            double power = gamepad1.right_trigger;
+        // Big Flywheel Control
+        if (gamepad1.left_trigger > 0.1) {
+            double power = gamepad1.left_trigger;
             rotateFlywheel(power);
         } else {
             rotateFlywheel(0);
+        }
+
+        // Small Flywheel Control
+        if (gamepad1.right_trigger > 0.1) {
+            double power = gamepad1.right_trigger;
+            rotateSmallFlywheel(power);
+        } else {
+            rotateSmallFlywheel(0);
         }
 
         // Speed Adjustment Controls
@@ -174,7 +182,8 @@ public class TeleOpMode extends OpMode {
         telemetry.addLine("Left Joystick: Movement");
         telemetry.addLine("Right Joystick: Rotation");
         telemetry.addLine("Right Joystick Button: Rotate 180 degrees clockwise");
-        telemetry.addLine("Right Trigger: Flywheel");
+        telemetry.addLine("Right Trigger: Small flywheel");
+        telemetry.addLine("Left Trigger: Big flywheel");
         telemetry.addLine("D-Pad: Microadjustments for movement");
         telemetry.addLine("Left + Right Bumper: Microadjustments for rotation");
         telemetry.addLine("X: Decrease default movement speed");
@@ -195,6 +204,9 @@ public class TeleOpMode extends OpMode {
     private void rotateFlywheel(double power) {
         leftBigFlywheel.setPower(power * flywheelSpeed);
         rightBigFlywheel.setPower(power * flywheelSpeed);
+    }
+
+    private void rotateSmallFlywheel(double power) {
         rightSmallFlywheel.setPower(power);
         leftSmallFlywheel.setPower(power);
     }
