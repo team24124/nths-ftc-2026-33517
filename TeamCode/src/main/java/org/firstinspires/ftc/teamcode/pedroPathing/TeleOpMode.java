@@ -40,13 +40,13 @@ public class TeleOpMode extends OpMode {
     double microSpeed = 0.10; // for micro adjustment speed
     double regularSpeed = 0.80; // for regular movement speed
     double turnSpeed = 0.50; // for rotation speed
-    double flywheelSpeed = 1300; // for flywheel speed
+    double flywheelSpeed = 1400; // for flywheel speed
 
     // Quick Rotation Angle
     double quickRotationAngle = 180.0;
 
     // Preset Flywheel Speeds
-    double flywheelPreset = 1300;
+    double flywheelPreset = 1400;
     double flywheelPreset2 = 1450;
 
     @Override
@@ -63,6 +63,15 @@ public class TeleOpMode extends OpMode {
         rightBigFlywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         leftSmallFlywheel = hardwareMap.get(CRServo.class, "leftSmallFlywheel");
         rightSmallFlywheel = hardwareMap.get(CRServo.class, "rightSmallFlywheel");
+
+        // Set PIDF values for flywheels
+        double p = 2;
+        double i = 0;
+        double d = 0;
+        double f = 12.55;
+
+        leftBigFlywheel.setVelocityPIDFCoefficients(p, i, d, f);
+        rightBigFlywheel.setVelocityPIDFCoefficients(p, i, d, f);
 
         // Reverse motor directions as needed
         leftBigFlywheel.setDirection(DcMotorSimple.Direction.REVERSE);

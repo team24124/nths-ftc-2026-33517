@@ -7,12 +7,11 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcorei.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 @Autonomous(name = "AutoMode Experimental", group = "Pedro Pathing")
 public class AutoModeExperimental extends OpMode {
-
     private Follower follower;
     private Timer pathTimer, opmodeTimer;
     private int pathState;
@@ -74,6 +73,7 @@ public class AutoModeExperimental extends OpMode {
                 // Rev small flywheels
                 // Launching the ball
                 rotateSmallFlywheel(1);
+                break;
         }
     }
 
