@@ -7,26 +7,36 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 @Autonomous(name = "Auto Mode", group = "Pedro Pathing")
 public class AutoMode extends OpMode {
 
     private Follower follower;
     private Timer pathTimer, opmodeTimer;
-
     private int pathState;
+    private DcMotorEx leftBigFlywheel;
+    private DcMotorEx rightBigFlywheel;
 
-    // Start Pose
+    private CRServo leftSmallFlywheel, rightSmallFlywheel;
     private final Pose startPose = new Pose(0, 0, Math.toRadians(0));
-    // End Pose
-    private final Pose forwardPose = new Pose(10, 0, Math.toRadians(0));
+    // Forward 91 inches
+    private final Pose forwardPose = new Pose(5, 0, Math.toRadians(0));
+    // Rotate 180 degrees at same position
+    private final Pose rotatePose = new Pose(5, 0, Math.toRadians(36.87);
 
     private Path forwardPath;
+    private Path rotatePath;
 
     public void buildPaths() {
-        /* Simple forward path using BezierLine (straight line) */
+        /* Forward path - moves 91 inches forward */
         forwardPath = new Path(new BezierLine(startPose, forwardPose));
         forwardPath.setLinearHeadingInterpolation(startPose.getHeading(), forwardPose.getHeading());
+
+        /* Rotation path - rotates 180 degrees in place */
+        rotatePath = new Path(new BezierLine(forwardPose, rotatePose));
+        rotatePath.setLinearHeadingInterpolation(forwardPose.getHeading(), rotatePose.getHeading());
     }
 
     public void autonomousPathUpdate() {
@@ -37,12 +47,34 @@ public class AutoMode extends OpMode {
                 setPathState(1);
                 break;
             case 1:
-                // Wait until path is complete
+                // Wait until forward path is complete
                 if (!follower.isBusy()) {
-                    // Path complete, stop autonomous
+                    // Forward path complete, start rotation
+                    setPathState(2);
+                }
+                break;
+            case 2:
+                // Start following the rotation path
+                follower.followPath(rotatePath);
+                setPathState(3);
+                break;
+            case 3:
+                // Wait until rotation is complete
+                if (!follower.isBusy()) {
+                    // Rotation complete, stop autonomous
                     setPathState(-1);
                 }
                 break;
+            case 4:
+                //setting velocity to 1450
+                leftBigFlywheel .setVelocity(1450);
+                rightBigFlywheel .setVelocity(1450);
+                setPathState(5);
+                break;
+            case 5:
+                //launching the ball
+                launchServo.setPosition(1)
+
         }
     }
 
@@ -52,7 +84,8 @@ public class AutoMode extends OpMode {
         autonomousPathUpdate();
 
         telemetry.addLine("====AUTONOMOUS DESCRIPTION====");
-        telemetry.addLine("This autonomous feature moves the robot forward a little and stops");
+        telemetry.addLine("This autonomous moves the robot forward 5 inches then rotates 37 degrees, shoots at 1450");
+        telemetry.addData("Path State", pathState);
 
         telemetry.update();
     }
