@@ -19,7 +19,7 @@ public class AutoMode extends OpMode {
     // Start Pose
     private final Pose startPose = new Pose(0, 0, Math.toRadians(0));
     // End Pose
-    private final Pose forwardPose = new Pose(25, 0, Math.toRadians(0));
+    private final Pose forwardPose = new Pose(55, 0, Math.toRadians(0));
 
     private Path forwardPath;
 

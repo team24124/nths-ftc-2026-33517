@@ -7,11 +7,11 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcorei.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 @Autonomous(name = "AutoMode Experimental", group = "Pedro Pathing")
-public class AutoModeExperimental extends OpMode {
+public class AutoModeExperimentalBLUE extends OpMode {
 
     private Follower follower;
     private Timer pathTimer, opmodeTimer;
@@ -70,10 +70,48 @@ public class AutoModeExperimental extends OpMode {
                 rotateFlywheel(1450);
                 setPathState(5);
                 break;
+
             case 5:
-                // Rev small flywheels
-                // Launching the ball
+                if(pathTimer.getElapsedTimeSeconds()>1.5) {
+                    setPathState(6);
+                }
+                break;
+
+            case 6:
+                //hehe i have made COMMENT
+                //now ur code is ruined
+                //hehe
                 rotateSmallFlywheel(1);
+                setPathState(6);
+                /*
+                * Fine because you don't want me to edit im adding stuff here
+                * pretend theres a variable called shot_count or something
+                *
+                * also theres like a 10% chance this works in the current
+                infrastructure
+                *
+                * if (pathTimer.getElaspedTimeSeconds() > 1) {
+                *   setPathState(7);
+                *   rotateSmallFlywheel(0);
+                * } else {
+                *   rotateSmallFlywheel(1);
+                * }
+                */
+            case 7:
+                if (pathTimer.getElapsedTimeSeconds() >1.0) {
+                    //Placeholder int (0) because I don't like red
+                    rotateSmallFlywheel(0);
+                }
+                /*
+                * if (pathTimer.getElaspedTimeSeconds() > 0.25){
+                *   if (shot_count < 3) {
+                *       shot_count += 1;
+                *       setPathState(6);
+                *   } else {
+                *       setPathState(-1);
+                *   }
+                * }
+                */
         }
     }
 
