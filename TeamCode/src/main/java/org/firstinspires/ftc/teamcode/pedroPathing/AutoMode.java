@@ -1,60 +1,96 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
-import com.bylazar.configurables.annotations.Configurable;
+import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.BezierLine;
+import com.pedropathing.geometry.Pose;
+import com.pedropathing.paths.Path;
+import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-public class AutoMode {
-}
-package org.firstinspires.ftc.teamcode.pedroPathing;
-import com.bylazar.configurables.annotations.Configurable;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+@Autonomous(name = "Auto Mode", group = "Pedro Pathing")
+public class AutoMode extends OpMode {
 
-import com.qualcomm.robotcore.hardware.DcMotor;
+    private Follower follower;
+    private Timer pathTimer, opmodeTimer;
 
-@Configurable
-@Autonomous(name="AutoMode", group="TeamCode")
-//@Disabled
-public class AutoMode extends LinearOpMode {
-    private DcMotor leftFrontDrive, rightFrontDrive, leftBackDrive, rightBackDrive;
-    private final double speed = 0.5;
-    private final
-    int stopspeed = 0;
+    private int pathState;
 
-    @Override
-    public void runOpMode() {
-        leftFrontDrive = hardwareMap.get(DcMotor.class,"leftFrontDrive");
-        rightFrontDrive = hardwareMap.get(DcMotor.class,"rightFrontDrive");
-        leftBackDrive = hardwareMap.get(DcMotor.class,"leftBackDrive");
-        rightBackDrive = hardwareMap.get(DcMotor.class,"rightBackDrive");
-        telemetry.addData("Status", "Initialized");
-        telemetry.update();
+    // Start Pose
+    private final Pose startPose = new Pose(0, 0, Math.toRadians(0));
+    // End Pose
+    private final Pose forwardPose = new Pose(10, 0, Math.toRadians(0));
 
-        waitForStart(); // Wait for the start button to be pressed
+    private Path forwardPath;
 
-        if (opModeIsActive()) {
-            leftFrontDrive.setPower(speed);
-            leftBackDrive.setPower(speed);
-            rightFrontDrive.setPower(speed);
-            rightBackDrive.setPower(speed);
-            sleep(2000);
-            leftFrontDrive.setPower(stopspeed);
-            leftBackDrive.setPower(stopspeed);
-            rightFrontDrive.setPower(stopspeed);
-            rightBackDrive.setPower(stopspeed);
+    public void buildPaths() {
+        /* Simple forward path using BezierLine (straight line) */
+        forwardPath = new Path(new BezierLine(startPose, forwardPose));
+        forwardPath.setLinearHeadingInterpolation(startPose.getHeading(), forwardPose.getHeading());
+    }
+
+    public void autonomousPathUpdate() {
+        switch (pathState) {
+            case 0:
+                // Start following the forward path
+                follower.followPath(forwardPath);
+                setPathState(1);
+                break;
+            case 1:
+                // Wait until path is complete
+                if (!follower.isBusy()) {
+                    // Path complete, stop autonomous
+                    setPathState(-1);
+                }
+                break;
         }
     }
+
+    @Override
+    public void loop() {
+        follower.update();
+        autonomousPathUpdate();
+
+        telemetry.addLine("====AUTONOMOUS DESCRIPTION====");
+        telemetry.addLine("This autonomous feature moves the robot forward a little and stops");
+
+        telemetry.update();
+    }
+
+    /** This method is called once at the init of the OpMode. **/
+    @Override
+    public void init() {
+        pathTimer = new Timer();
+        opmodeTimer = new Timer();
+        opmodeTimer.resetTimer();
+
+        follower = Constants.createFollower(hardwareMap);
+        buildPaths();
+        follower.setStartingPose(startPose);
+
+        telemetry.addData("Status", "Initialized");
+        telemetry.update();
+    }
+
+    @Override
+    public void init_loop() {
+    }
+
+    @Override
+    public void start() {
+        opmodeTimer.resetTimer();
+        setPathState(0);
+    }
+
+    @Override
+    public void stop() {
+    }
+
+    /**
+     * These change the states of the paths and actions. It will also reset the timers of the individual switches
+     **/
+    public void setPathState(int pState) {
+        pathState = pState;
+        pathTimer.resetTimer();
+    }
 }
-
-
-
-
-
-
-
-
-
-
-

@@ -149,7 +149,7 @@ public class TeleOpMode extends OpMode {
         }
 
         // Small Flywheel Control
-        if (gamepad1.right_trigger > 0.1) {
+        if (gamepad1.right_trigger > 0.1 && gamepad1.left_trigger > 0.1) {
             double power = gamepad1.right_trigger;
             rotateSmallFlywheel(power);
         } else {
@@ -158,13 +158,9 @@ public class TeleOpMode extends OpMode {
 
         // Speed Adjustment Controls
         if (gamepad1.xWasPressed()) {
-            if (regularSpeed >= 0.05) {
-                regularSpeed -= 0.05;
-            }
+            flywheelSpeed = 1350;
         } else if (gamepad1.bWasPressed()) {
-            if (regularSpeed <= 1) {
-                regularSpeed += 0.05;
-            }
+            flywheelSpeed = 1550;
         } else if (gamepad1.yWasPressed()) {
             if (flywheelSpeed <= 2400) {
                 flywheelSpeed += 50;
