@@ -11,7 +11,7 @@ import com.qualcomm.robotcorei.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 @Autonomous(name = "AutoMode Experimental", group = "Pedro Pathing")
-public class AutoModeExperimental extends OpMode {
+public class AutoModeExperimentalBLUE extends OpMode {
 
     private Follower follower;
     private Timer pathTimer, opmodeTimer;
