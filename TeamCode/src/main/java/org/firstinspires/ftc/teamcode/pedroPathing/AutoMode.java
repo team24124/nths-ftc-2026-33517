@@ -8,7 +8,7 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-@Autonomous(name = "AutoMode", group = "Pedro Pathing")
+@Autonomous(name = "Auto Mode", group = "Pedro Pathing")
 public class AutoMode extends OpMode {
 
     private Follower follower;
@@ -19,7 +19,7 @@ public class AutoMode extends OpMode {
     // Start Pose
     private final Pose startPose = new Pose(0, 0, Math.toRadians(0));
     // End Pose
-    private final Pose forwardPose = new Pose(10, 0, Math.toRadians(0));
+    private final Pose forwardPose = new Pose(25, 0, Math.toRadians(0));
 
     private Path forwardPath;
 
@@ -86,6 +86,9 @@ public class AutoMode extends OpMode {
     public void stop() {
     }
 
+    /**
+     * These change the states of the paths and actions. It will also reset the timers of the individual switches
+     **/
     public void setPathState(int pState) {
         pathState = pState;
         pathTimer.resetTimer();
