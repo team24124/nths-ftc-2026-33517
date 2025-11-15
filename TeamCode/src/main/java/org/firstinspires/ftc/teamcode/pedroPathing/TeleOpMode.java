@@ -155,7 +155,7 @@ public class TeleOpMode extends OpMode {
         }
 
         // Small Flywheel Control
-        if (gamepad1.right_trigger >= 0.1) {
+        if (gamepad1.right_trigger >= 0.1 && leftBigFlywheel.getVelocity() >= 1000) {
             rotateSmallFlywheel(1);
         } else {
             rotateSmallFlywheel(0);

@@ -8,7 +8,7 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-@Autonomous(name = "Auto Mode", group = "Pedro Pathing")
+@Autonomous(name = "AutoMode", group = "Pedro Pathing")
 public class AutoMode extends OpMode {
 
     private Follower follower;

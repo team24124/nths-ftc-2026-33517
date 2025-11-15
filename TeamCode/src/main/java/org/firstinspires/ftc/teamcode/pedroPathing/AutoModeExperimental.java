@@ -10,8 +10,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcorei.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
-@Autonomous(name = "AutoMode Line", group = "Pedro Pathing")
-public class AutoMode extends OpMode {
+@Autonomous(name = "AutoMode Experimental", group = "Pedro Pathing")
+public class AutoModeExperimental extends OpMode {
 
     private Follower follower;
     private Timer pathTimer, opmodeTimer;
@@ -24,7 +24,7 @@ public class AutoMode extends OpMode {
     // Forward 91 inches
     private final Pose forwardPose = new Pose(5, 0, Math.toRadians(0));
     // Rotate 180 degrees at same position
-    private final Pose rotatePose = new Pose(5, 0, Math.toRadians(36.87);
+    private final Pose rotatePose = new Pose(5, 0, Math.toRadians(36.87));
 
     private Path forwardPath;
     private Path rotatePath;
@@ -66,15 +66,14 @@ public class AutoMode extends OpMode {
                 }
                 break;
             case 4:
-                //setting velocity to 1450
-                leftBigFlywheel .setVelocity(1450);
-                rightBigFlywheel .setVelocity(1450);
+                // Rev big flywheels
+                rotateFlywheel(1450);
                 setPathState(5);
                 break;
             case 5:
-                //launching the ball
-                launchServo.setPosition(1)
-
+                // Rev small flywheels
+                // Launching the ball
+                rotateSmallFlywheel(1);
         }
     }
 
@@ -87,6 +86,7 @@ public class AutoMode extends OpMode {
         telemetry.addLine("This autonomous moves the robot forward 91 inches then rotates 180 degrees, shoots at 1450");
         telemetry.addLine("\n=====WARNING=====");
         telemetry.addLine("This autonomous will only work from the upper left corner in front of the blue goal");
+        telemetry.addLine("DO NOT USE THIS IF OTHERWISE");
         telemetry.addData("Path State", pathState);
 
         telemetry.update();
@@ -124,5 +124,15 @@ public class AutoMode extends OpMode {
     public void setPathState(int pState) {
         pathState = pState;
         pathTimer.resetTimer();
+    }
+
+    private void rotateFlywheel(double speed) {
+        leftBigFlywheel.setVelocity(speed);
+        rightBigFlywheel.setVelocity(speed);
+    }
+
+    private void rotateSmallFlywheel(double power) {
+        rightSmallFlywheel.setPower(power);
+        leftSmallFlywheel.setPower(power);
     }
 }
