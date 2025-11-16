@@ -152,7 +152,7 @@ public class TeleOpMode extends OpMode {
         follower.setTeleOpDrive(line, strafe, turn, true);
 
         // Big Flywheel Control
-        if (gamepad1.left_trigger >= 0.1 && !debounce) {
+        if (gamepad1.left_trigger >= 0.5 && !debounce) {
             debounce = true;
             if (leftBigFlywheel.getVelocity() == 0) {
                 rotateFlywheel(flywheelSpeed);
