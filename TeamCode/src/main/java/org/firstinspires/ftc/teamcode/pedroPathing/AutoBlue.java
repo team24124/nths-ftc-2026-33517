@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 @Autonomous(name = "Auto Blue", group = "Examples")
-public class Autoblue extends OpMode {
+public class AutoBlue extends OpMode {
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
 
@@ -70,25 +70,20 @@ public class Autoblue extends OpMode {
     public void autonomousPathUpdate() {
         switch (pathState) {
             case 0:
-                // Move robot to the balls on the right side
                 follower.followPath(move1);
                 checkIfBusy(1);
                 break;
             case 1:
-                // Wait for the path to complete
                 checkIfBusy(2);
                 break;
             case 2:
-                // Move robot to the middle of the goal facing towards the blue goal
                 follower.followPath(move2);
                 checkIfBusy(3);
                 break;
             case 3:
-                // Wait for the path to complete
                 checkIfBusy(4);
                 break;
             case 4:
-                // Update the telemetry
                 telmetry.addData("Status", "Auto Complete");
                 break;
         }
