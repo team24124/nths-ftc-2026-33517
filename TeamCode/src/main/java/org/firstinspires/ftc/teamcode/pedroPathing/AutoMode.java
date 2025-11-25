@@ -223,10 +223,10 @@ public class AutoMode extends OpMode {
                     telemetry.addLine("STATUS: Starting at the front of the RED goal");
                     break;
                 case 2:
-                    telemetry.addLine("STATUS: Starting at the BLUE's small launch area");
+                    telemetry.addLine("STATUS: Starting at the BLUE small launch area");
                     break;
                 default:
-                    telemetry.addLine("STATUS: Starting at the RED's small launch area");
+                    telemetry.addLine("STATUS: Starting at the RED small launch area");
                     break;
             }
         } else { // Team and starting position was not selected
