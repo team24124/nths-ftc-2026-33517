@@ -3,30 +3,71 @@ package org.firstinspires.ftc.teamcode.pedroPathing; // make sure this aligns wi
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-@Autonomous(name = "Auto Blue", group = "Examples")
-public class AutoBlue extends OpMode {
+@Autonomous(name = "AutoMode", group = "Examples")
+public class AutoMode extends OpMode {
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
-
     private int pathState;
 
-    private final Pose startPose = new Pose(24, 120, Math.toRadians(315)),
-            middlePose = new Pose(72, 72, Math.toRadians(135)),
-            ballsPose = new Pose(96, 84, Math.toRadians(0)),
-            ballsCapture = new Pose(120, 84, Math.toRadians(0)),
-            ballsPose2 = new Pose (96, 60, Math.toRadians(0)),
-            ballsCapture2 = new Pose(120, 60, Math.toRadians(0)),
-            ballsPose3 = new Pose(96, 36, Math.toRadians(0)),
-            ballsCapture3 = new Pose(120, 36, Math.toRadians(0)),
-            base = new Pose(105, 33, Math.toRadians(0));
+    private enum Team {RED, BLUE};
+    private boolean teamSelected = false;
+    private Team selectedTeam = Team.RED;
+
+    /*
+    * 0: Front of blue goal
+    * 1: Front of red goal
+    * 2: Left of small launch area
+    * 3: Right of small launch area
+     */
+    private int startPosition = 0;
+
+    private Pose startPose, middlePose, ballsPose, ballsCapture, ballsPose2, ballsCapture2, ballsPose3, ballsCapture3, base;
 
     private PathChain toMiddle, topBalls, middleBalls, bottomBalls, toBase;
+
+    private void setPosesForTeam() {
+        // Set team poses based on driver input
+        if (selectedTeam == Team.RED) { // Poses for Red team
+            middlePose = new Pose(72, 72, Math.toRadians(135));
+            ballsPose = new Pose(96, 84, Math.toRadians(0));
+            ballsCapture = new Pose(120, 84, Math.toRadians(0));
+            ballsPose2 = new Pose (96, 60, Math.toRadians(0));
+            ballsCapture2 = new Pose(120, 60, Math.toRadians(0));
+            ballsPose3 = new Pose(96, 36, Math.toRadians(0));
+            ballsCapture3 = new Pose(120, 36, Math.toRadians(0));
+            base = new Pose(105, 33, Math.toRadians(0));
+        } else { // Poses for Blue team
+            middlePose = new Pose(72, 72, Math.toRadians(45));
+            ballsPose = new Pose(48, 84, Math.toRadians(180));
+            ballsCapture = new Pose(24, 84, Math.toRadians(180));
+            ballsPose2 = new Pose (48, 60, Math.toRadians(180));
+            ballsCapture2 = new Pose(24, 60, Math.toRadians(180));
+            ballsPose3 = new Pose(48, 36, Math.toRadians(180));
+            ballsCapture3 = new Pose(24, 36, Math.toRadians(180));
+            base = new Pose(39, 33, Math.toRadians(180));
+        }
+
+        // Set starting positions based on driver input
+        switch (startPosition) {
+            case 0:
+                startPose = new Pose(24, 24, Math.toRadians(315));
+                break;
+            case 1:
+                startPose = new Pose(120, 24, Math.toRadians(225));
+                break;
+            case 2:
+                startPose = new Pose(60, 12, Math.toRadians(90));
+                break;
+            default:
+                startPose = new Pose(84, 12, Math.toRadians(90));
+                break;
+        }
+    }
 
     public void buildPaths() {
         // Move to middle to shoot preloaded balls
@@ -96,7 +137,7 @@ public class AutoBlue extends OpMode {
                 setPathState(1);
                 break;
             case 1:
-                // TODO: Shoot preloaded balls
+                // TODO: Shoot balls
                 checkIfBusy(2);
                 break;
             case 2:
@@ -104,7 +145,7 @@ public class AutoBlue extends OpMode {
                 setPathState(3);
                 break;
             case 3:
-                // TODO: Shoot top balls
+                // TODO: Shoot balls
                 checkIfBusy(4);
                 break;
             case 4:
@@ -112,7 +153,7 @@ public class AutoBlue extends OpMode {
                 setPathState(5);
                 break;
             case 5:
-                // TODO: Shoot middle balls
+                // TODO: Shoot balls
                 checkIfBusy(6);
                 break;
             case 6:
@@ -120,7 +161,7 @@ public class AutoBlue extends OpMode {
                 setPathState(7);
                 break;
             case 7:
-                // TODO: Shoot bottom balls
+                // TODO: Shoot balls
                 checkIfBusy(8);
                 break;
             case 8:
@@ -157,21 +198,79 @@ public class AutoBlue extends OpMode {
         opmodeTimer.resetTimer();
 
         follower = Constants.createFollower(hardwareMap);
-        buildPaths();
-        follower.setStartingPose(startPose);
-
-        telemetry.addLine("====WARNING====");
-        telemetry.addLine("THIS AUTO CURRENTLY WORKS FROM THE FRONT OF THE BLUE GOAL");
     }
 
     /** This method is called continuously after Init while waiting for "play". **/
     @Override
-    public void init_loop() {}
+    public void init_loop() {
+        telemetry.addLine("====STARTING POSITION SETTINGS====");
+        telemetry.addLine("! Selecting where the robot starts on the field determines its autonomous path !");
+        telemetry.addLine("! Connect your controller to select a position !")
+        telemetry.addLine();
+        telemetry.addLine("X: Front of the Blue Goal");
+        telemetry.addLine("Y: Front of the Red Goal");
+        telemetry.addLine("A: Left of the Small Launch Area");
+        telemetry.addLine("B: Right of the Small Launch Area");
+        telemetry.addLine();
+
+        // Set status message based on position selection
+        if (teamSelected) { // Team and starting position was selected
+            switch (startPosition) {
+                case 0:
+                    telemetry.addLine("STATUS: Starting at the front of the BLUE goal");
+                    break;
+                case 1:
+                    telemetry.addLine("STATUS: Starting at the front of the RED goal");
+                    break;
+                case 2:
+                    telemetry.addLine("STATUS: Starting at the BLUE's small launch area");
+                    break;
+                default:
+                    telemetry.addLine("STATUS: Starting at the RED's small launch area");
+                    break;
+            }
+        } else { // Team and starting position was not selected
+            telemetry.addLine("STATUS: Waiting..");
+        }
+
+        // Controls to select team
+        if (!teamSelected) {
+            if (gamepad1.x) {
+                selectedTeam = Team.BLUE;
+                startPosition = 0;
+                teamSelected = true;
+            } else if (gamepad1.y) {
+                selectedTeam = Team.RED;
+                startPosition = 1;
+                teamSelected = true;
+            }  else if (gamepad1.a) {
+                selectedTeam = Team.BLUE;
+                startPosition = 2;
+                teamSelected = true;
+            } else if (gamepad1.b) {
+                selectedTeam = Team.RED;
+                startPosition = 3;
+                teamSelected = true;
+            }
+        }
+
+        telemetry.update();
+    }
 
     /** This method is called once at the start of the OpMode.
      * It runs all the setup actions, including building paths and starting the path system **/
     @Override
     public void start() {
+        // Make sure autonomous can't run until the driver picks a starting position
+        if (!teamSelected) {
+            throw new IllegalStateException("TEAM NOT SELECTED! Use the buttons on your controller during initialization to select a team before pressing play!");
+        }
+
+        // Build autonomous pathing
+        setPosesForTeam();
+        follower.setStartingPose(startPose);
+        buildPaths();
+
         opmodeTimer.resetTimer();
         setPathState(0);
     }
