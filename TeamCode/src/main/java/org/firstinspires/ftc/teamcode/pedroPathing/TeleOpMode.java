@@ -57,7 +57,6 @@ public class TeleOpMode extends OpMode {
 
         // Initialize the flywheels
         flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
-        flywheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         // Set PIDF values for flywheels
         double p = 2;
@@ -143,7 +142,7 @@ public class TeleOpMode extends OpMode {
         // Big Flywheel Control
         if (gamepad1.left_trigger >= 0.5 && !debounce) {
             debounce = true;
-            if (flywheel.getVelocity() <= 50) {
+            if (flywheel.getVelocity() == 0) {
                 rotateFlywheel(flywheelSpeed);
             } else {
                 rotateFlywheel(0);
