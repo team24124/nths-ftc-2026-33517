@@ -52,7 +52,7 @@ public class ForwardTest extends OpMode {
         autonomousPathUpdate();
 
         telemetry.addLine("====AUTONOMOUS DESCRIPTION====");
-        telemetry.addLine("This autonomous feature moves the robot forward a little and stops");
+        telemetry.addLine("This autonomous moves the robot forward a little and stops");
 
         telemetry.update();
     }

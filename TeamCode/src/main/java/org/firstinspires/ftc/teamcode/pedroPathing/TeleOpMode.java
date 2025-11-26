@@ -26,8 +26,7 @@ public class TeleOpMode extends OpMode {
     private Follower follower;
     private TelemetryManager telemetryM;
 
-    private DcMotorEx leftBigFlywheel, rightBigFlywheel;
-    private CRServo leftSmallFlywheel, rightSmallFlywheel;
+    private DcMotorEx flywheel;
 
     private boolean isRotatingToTarget = false;
     private double targetHeading = 0;
@@ -57,12 +56,8 @@ public class TeleOpMode extends OpMode {
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
 
         // Initialize the flywheels
-        leftBigFlywheel = hardwareMap.get(DcMotorEx.class, "leftBigFlywheel");
-        leftBigFlywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightBigFlywheel = hardwareMap.get(DcMotorEx.class, "rightBigFlywheel");
-        rightBigFlywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftSmallFlywheel = hardwareMap.get(CRServo.class, "leftSmallFlywheel");
-        rightSmallFlywheel = hardwareMap.get(CRServo.class, "rightSmallFlywheel");
+        flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
+        flywheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         // Set PIDF values for flywheels
         double p = 2;
@@ -70,16 +65,10 @@ public class TeleOpMode extends OpMode {
         double d = 0;
         double f = 12.55;
 
-        leftBigFlywheel.setVelocityPIDFCoefficients(p, i, d, f);
-        rightBigFlywheel.setVelocityPIDFCoefficients(p, i, d, f);
+        flywheel.setVelocityPIDFCoefficients(p, i, d, f);
 
-        // Reverse motor directions as needed
-        leftBigFlywheel.setDirection(DcMotorSimple.Direction.REVERSE);
-        leftSmallFlywheel.setDirection(DcMotorSimple.Direction.REVERSE);
-
-        // Set zero power behaviour of the flywheels
-        leftBigFlywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        rightBigFlywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        // Set zero power behaviour of the flywheel
+        flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
     }
 
     @Override
@@ -154,21 +143,21 @@ public class TeleOpMode extends OpMode {
         // Big Flywheel Control
         if (gamepad1.left_trigger >= 0.5 && !debounce) {
             debounce = true;
-            if (leftBigFlywheel.getVelocity() == 0) {
+            if (flywheel.getVelocity() <= 50) {
                 rotateFlywheel(flywheelSpeed);
             } else {
                 rotateFlywheel(0);
             }
-        } else if (gamepad1.left_trigger < 0.1) {
+        } else if (gamepad1.left_trigger < 0.5) {
             debounce = false;
         }
 
         // Small Flywheel Control
-        if (gamepad1.right_trigger >= 0.1 && leftBigFlywheel.getVelocity() >= 1000) {
+        /*if (gamepad1.right_trigger >= 0.1 && leftBigFlywheel.getVelocity() >= 1000) {
             rotateSmallFlywheel(1);
         } else {
             rotateSmallFlywheel(0);
-        }
+        }*/
 
         // Speed Adjustment Controls
         if (gamepad1.xWasPressed()) {
@@ -198,8 +187,8 @@ public class TeleOpMode extends OpMode {
         telemetry.addData("Current Heading (deg)", Math.toDegrees(follower.getPose().getHeading()));
         telemetry.addData("Movement Speed", regularSpeed);
         telemetry.addData("Turning Speed", turnSpeed);
-        telemetry.addData("Flywheel Targeted Velocity ==", flywheelSpeed);
-        telemetry.addData("Flywheel Real-Time Velocity", leftBigFlywheel.getVelocity());
+        telemetry.addData("Flywheel Targeted Velocity", flywheelSpeed);
+        telemetry.addData("Flywheel Real-Time Velocity", flywheel.getVelocity());
 
         // Controls Manual
         telemetry.addLine("\n====CONTROLS====");
@@ -219,12 +208,11 @@ public class TeleOpMode extends OpMode {
     }
 
     private void rotateFlywheel(double speed) {
-        leftBigFlywheel.setVelocity(speed);
-        rightBigFlywheel.setVelocity(speed);
+        flywheel.setVelocity(speed);
     }
 
-    private void rotateSmallFlywheel(double power) {
+    /*private void rotateSmallFlywheel(double power) {
         rightSmallFlywheel.setPower(power);
         leftSmallFlywheel.setPower(power);
-    }
+    }*/
 }

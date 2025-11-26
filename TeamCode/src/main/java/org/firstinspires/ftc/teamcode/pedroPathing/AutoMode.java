@@ -55,10 +55,10 @@ public class AutoMode extends OpMode {
         // Set starting positions based on driver input
         switch (startPosition) {
             case 0:
-                startPose = new Pose(24, 24, Math.toRadians(315));
+                startPose = new Pose(24, 120, Math.toRadians(315));
                 break;
             case 1:
-                startPose = new Pose(120, 24, Math.toRadians(225));
+                startPose = new Pose(120, 120, Math.toRadians(225));
                 break;
             case 2:
                 startPose = new Pose(60, 12, Math.toRadians(90));
@@ -205,7 +205,7 @@ public class AutoMode extends OpMode {
     public void init_loop() {
         telemetry.addLine("====STARTING POSITION SETTINGS====");
         telemetry.addLine("! Selecting where the robot starts on the field determines its autonomous path !");
-        telemetry.addLine("! Connect your controller to select a position !")
+        telemetry.addLine("! Connect your controller to select a position !");
         telemetry.addLine();
         telemetry.addLine("X: Front of the Blue Goal");
         telemetry.addLine("Y: Front of the Red Goal");
