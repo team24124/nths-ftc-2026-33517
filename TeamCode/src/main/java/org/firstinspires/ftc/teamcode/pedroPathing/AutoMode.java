@@ -13,6 +13,7 @@ public class AutoMode extends OpMode {
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
     private int pathState;
+    private boolean autoComplete = false;
 
     private enum Team {RED, BLUE};
     private boolean teamSelected = false;
@@ -121,7 +122,7 @@ public class AutoMode extends OpMode {
         autonomousPathUpdate();
 
         // Feedback to Driver Hub for debugging
-        telemetry.addData("Status", "Auto in progress..");
+        telemetry.addData("Status", (autoComplete ? "In Progress" : "Completed"));
         telemetry.addData("Path State", pathState);
         telemetry.addData("X", follower.getPose().getX());
         telemetry.addData("Y", follower.getPose().getY());
@@ -234,24 +235,22 @@ public class AutoMode extends OpMode {
         }
 
         // Controls to select team
-        if (!teamSelected) {
-            if (gamepad1.x) {
-                selectedTeam = Team.BLUE;
-                startPosition = 0;
-                teamSelected = true;
-            } else if (gamepad1.y) {
-                selectedTeam = Team.RED;
-                startPosition = 1;
-                teamSelected = true;
-            }  else if (gamepad1.a) {
-                selectedTeam = Team.BLUE;
-                startPosition = 2;
-                teamSelected = true;
-            } else if (gamepad1.b) {
-                selectedTeam = Team.RED;
-                startPosition = 3;
-                teamSelected = true;
-            }
+        if (gamepad1.x) {
+            selectedTeam = Team.BLUE;
+            startPosition = 0;
+            teamSelected = true;
+        } else if (gamepad1.y) {
+            selectedTeam = Team.RED;
+            startPosition = 1;
+            teamSelected = true;
+        }  else if (gamepad1.a) {
+            selectedTeam = Team.BLUE;
+            startPosition = 2;
+            teamSelected = true;
+        } else if (gamepad1.b) {
+            selectedTeam = Team.RED;
+            startPosition = 3;
+            teamSelected = true;
         }
 
         telemetry.update();
