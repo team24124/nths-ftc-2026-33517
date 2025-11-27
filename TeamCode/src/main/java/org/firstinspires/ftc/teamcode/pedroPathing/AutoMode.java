@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing; // make sure this aligns with class location
 
+import static android.os.SystemClock.sleep;
+
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
@@ -7,6 +9,8 @@ import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 @Autonomous(name = "AutoMode", group = "Examples")
 public class AutoMode extends OpMode {
@@ -15,9 +19,14 @@ public class AutoMode extends OpMode {
     private int pathState;
     private boolean autoComplete = false;
 
+    private DcMotorEx flywheel;
+
     private enum Team {RED, BLUE};
     private boolean teamSelected = false;
     private Team selectedTeam = Team.RED;
+
+    private double flywheelTime = 3.0; // Determines how long the flywheel will activate to shoot balls before moving to the next path
+    private double shootVelocity = 200; // Determines the default shoot velocity of the flywheel
 
     /*
     * 0: Front of blue goal
@@ -34,7 +43,7 @@ public class AutoMode extends OpMode {
     private void setPosesForTeam() {
         // Set team poses based on driver input
         if (selectedTeam == Team.RED) { // Poses for Red team
-            middlePose = new Pose(72, 72, Math.toRadians(135));
+            middlePose = new Pose(84, 84, Math.toRadians(135));
             ballsPose = new Pose(96, 84, Math.toRadians(0));
             ballsCapture = new Pose(120, 84, Math.toRadians(0));
             ballsPose2 = new Pose (96, 60, Math.toRadians(0));
@@ -43,7 +52,7 @@ public class AutoMode extends OpMode {
             ballsCapture3 = new Pose(120, 36, Math.toRadians(0));
             base = new Pose(105, 33, Math.toRadians(0));
         } else { // Poses for Blue team
-            middlePose = new Pose(72, 72, Math.toRadians(45));
+            middlePose = new Pose(60, 84, Math.toRadians(45));
             ballsPose = new Pose(48, 84, Math.toRadians(180));
             ballsCapture = new Pose(24, 84, Math.toRadians(180));
             ballsPose2 = new Pose (48, 60, Math.toRadians(180));
@@ -138,44 +147,93 @@ public class AutoMode extends OpMode {
                 setPathState(1);
                 break;
             case 1:
-                // TODO: Shoot balls
                 checkIfBusy(2);
                 break;
             case 2:
-                follower.followPath(topBalls, true);
+                // Shoot preloaded balls
+                rotateFlywheel(shootVelocity);
                 setPathState(3);
                 break;
             case 3:
-                // TODO: Shoot balls
-                checkIfBusy(4);
+                // Wait for shooting to complete
+                if (pathTimer.getElapsedTimeSeconds() > flywheelTime) {
+                    rotateFlywheel(0);
+                    setPathState(4);
+                }
                 break;
             case 4:
-                follower.followPath(middleBalls, true);
+                follower.followPath(topBalls, true);
                 setPathState(5);
                 break;
             case 5:
-                // TODO: Shoot balls
                 checkIfBusy(6);
                 break;
             case 6:
-                follower.followPath(bottomBalls, true);
+                // Shoot balls
+                rotateFlywheel(shootVelocity);
                 setPathState(7);
                 break;
             case 7:
-                // TODO: Shoot balls
-                checkIfBusy(8);
+                // Wait for shooting to complete
+                if (pathTimer.getElapsedTimeSeconds() > flywheelTime) {
+                    rotateFlywheel(0);
+                    setPathState(8);
+                }
                 break;
             case 8:
-                follower.followPath(toBase, true);
+                follower.followPath(middleBalls, true);
                 setPathState(9);
                 break;
             case 9:
                 checkIfBusy(10);
                 break;
             case 10:
+                // Shoot balls
+                rotateFlywheel(shootVelocity);
+                setPathState(11);
+                break;
+            case 11:
+                // Wait for shooting to complete
+                if (pathTimer.getElapsedTimeSeconds() > flywheelTime) {
+                    rotateFlywheel(0);
+                    setPathState(12);
+                }
+                break;
+            case 12:
+                follower.followPath(bottomBalls, true);
+                setPathState(13);
+                break;
+            case 13:
+                checkIfBusy(14);
+                break;
+            case 14:
+                // Shoot balls
+                rotateFlywheel(shootVelocity);
+                setPathState(15);
+                break;
+            case 15:
+                // Wait for shooting to complete
+                if (pathTimer.getElapsedTimeSeconds() > flywheelTime) {
+                    rotateFlywheel(0);
+                    setPathState(16);
+                }
+                break;
+            case 16:
+                follower.followPath(toBase, true);
+                setPathState(17);
+                break;
+            case 17:
+                checkIfBusy(18);
+                break;
+            case 18:
                 telemetry.addData("Status", "Auto Complete");
                 break;
         }
+    }
+
+    /** This method sets the flywheel speed **/
+    public void rotateFlywheel(double velocity) {
+        flywheel.setVelocity(velocity);
     }
 
     /** This method checks if the path is busy, if not: set the path state **/
@@ -199,6 +257,12 @@ public class AutoMode extends OpMode {
         opmodeTimer.resetTimer();
 
         follower = Constants.createFollower(hardwareMap);
+
+        flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
+        flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+        // Flywheel PIDF tuning
+        flywheel.setVelocityPIDFCoefficients(2, 0, 0, 12.55);
     }
 
     /** This method is called continuously after Init while waiting for "play". **/

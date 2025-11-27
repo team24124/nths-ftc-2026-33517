@@ -39,14 +39,14 @@ public class TeleOpMode extends OpMode {
     double microSpeed = 0.10; // for micro adjustment speed
     double regularSpeed = 0.80; // for regular movement speed
     double turnSpeed = 0.50; // for rotation speed
-    double flywheelSpeed = 1400; // for flywheel speed
+    double flywheelSpeed = 200; // for flywheel speed
 
     // Quick Rotation Angle
     double quickRotationAngle = 180.0;
 
     // Preset Flywheel Speeds
-    double flywheelPreset = 1400;
-    double flywheelPreset2 = 1450;
+    double flywheelPreset = 100;
+    double flywheelPreset2 = 150;
 
     @Override
     public void init() {
@@ -58,13 +58,8 @@ public class TeleOpMode extends OpMode {
         // Initialize the flywheels
         flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
 
-        // Set PIDF values for flywheels
-        double p = 2;
-        double i = 0;
-        double d = 0;
-        double f = 12.55;
-
-        flywheel.setVelocityPIDFCoefficients(p, i, d, f);
+        // Flywheel PIDF tuning
+        flywheel.setVelocityPIDFCoefficients(2, 0, 0, 12.55);
 
         // Set zero power behaviour of the flywheel
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
