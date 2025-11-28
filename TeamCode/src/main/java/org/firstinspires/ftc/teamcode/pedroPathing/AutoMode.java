@@ -9,6 +9,8 @@ import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 @Autonomous(name = "AutoMode", group = "Examples")
 public class AutoMode extends OpMode {
@@ -16,9 +18,15 @@ public class AutoMode extends OpMode {
     private Timer pathTimer, actionTimer, opmodeTimer;
     private int pathState;
 
+    private DcMotorEx flywheel;
+
     private enum Team {RED, BLUE};
     private boolean teamSelected = false;
     private Team selectedTeam = Team.RED;
+
+    // Settings
+    private double flywheelSpeed = 150.0; // Default flywheel speed
+    private double pathDelay = 0.5; // Delays between steps in pathing in seconds (s)
 
     /*
     * 0: Front of blue goal
@@ -35,7 +43,7 @@ public class AutoMode extends OpMode {
     private void setPosesForTeam() {
         // Set team poses based on driver input
         if (selectedTeam == Team.RED) { // Poses for Red team
-            middlePose = new Pose(72, 72, Math.toRadians(135));
+            middlePose = new Pose(84, 84, Math.toRadians(45));
             ballsPose = new Pose(96, 84, Math.toRadians(0));
             ballsCapture = new Pose(114, 84, Math.toRadians(0));
             ballsPose2 = new Pose (96, 60, Math.toRadians(0));
@@ -44,7 +52,7 @@ public class AutoMode extends OpMode {
             ballsCapture3 = new Pose(114, 36, Math.toRadians(0));
             base = new Pose(105, 33, Math.toRadians(0));
         } else { // Poses for Blue team
-            middlePose = new Pose(72, 72, Math.toRadians(45));
+            middlePose = new Pose(60, 84, Math.toRadians(135));
             ballsPose = new Pose(48, 84, Math.toRadians(180));
             ballsCapture = new Pose(30, 84, Math.toRadians(180));
             ballsPose2 = new Pose (48, 60, Math.toRadians(180));
@@ -179,10 +187,17 @@ public class AutoMode extends OpMode {
         }
     }
 
+    /** This  method sets the velocity of the flywheel **/
+    public void rotateFlywheel(double velocity) {
+        flywheel.setVelocity(velocity);
+    }
+
     /** This method checks if the path is busy, if not: set the path state **/
     public void checkIfBusy(int state) {
         if (!follower.isBusy()) {
-            setPathState(state);
+            if (pathTimer.getElapsedTimeSeconds() > pathDelay) { // Delay before next part in the pathing
+                setPathState(state);
+            }
         }
     }
 
@@ -200,6 +215,10 @@ public class AutoMode extends OpMode {
         opmodeTimer.resetTimer();
 
         follower = Constants.createFollower(hardwareMap);
+
+        flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
+        flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        flywheel.setVelocityPIDFCoefficients(0,0,0,0);
     }
 
     /** This method is called continuously after Init while waiting for "play". **/
