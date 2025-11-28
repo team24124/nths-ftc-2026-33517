@@ -9,6 +9,7 @@ import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
@@ -19,6 +20,7 @@ public class AutoMode extends OpMode {
     private int pathState;
 
     private DcMotorEx flywheel;
+    private CRServo servo;
 
     private enum Team {RED, BLUE};
     private boolean teamSelected = false;
@@ -27,6 +29,8 @@ public class AutoMode extends OpMode {
     // Settings
     private double flywheelSpeed = 150.0; // Default flywheel speed
     private double pathDelay = 0.5; // Delays between steps in pathing in seconds (s)
+    private double flywheelSpinUpTime = 2.0; // Time for flywheel to reach speed (s)
+    private double shootingTime = 5.0; // Time to shoot all 3 balls (s)
 
     /*
     * 0: Front of blue goal
@@ -140,6 +144,7 @@ public class AutoMode extends OpMode {
     }
 
     // Check for a new autonomous path
+    // Check for a new autonomous path
     public void autonomousPathUpdate() {
         switch (pathState) {
             case 0:
@@ -147,43 +152,96 @@ public class AutoMode extends OpMode {
                 setPathState(1);
                 break;
             case 1:
-                // TODO: Shoot balls
-                checkIfBusy(2);
+                checkIfBusy(2, pathDelay);
                 break;
             case 2:
-                follower.followPath(topBalls, true);
-                setPathState(3);
+                // Shoot balls
+                if (shootBalls()) {
+                    setPathState(3);
+                }
                 break;
             case 3:
-                // TODO: Shoot balls
-                checkIfBusy(4);
+                follower.followPath(topBalls, true);
+                setPathState(4);
                 break;
             case 4:
-                follower.followPath(middleBalls, true);
-                setPathState(5);
+                checkIfBusy(5, pathDelay);
                 break;
             case 5:
-                // TODO: Shoot balls
-                checkIfBusy(6);
+                // Shoot balls
+                if (shootBalls()) {
+                    setPathState(6);
+                }
                 break;
             case 6:
-                follower.followPath(bottomBalls, true);
+                follower.followPath(middleBalls, true);
                 setPathState(7);
                 break;
             case 7:
-                // TODO: Shoot balls
-                checkIfBusy(8);
+                checkIfBusy(8, pathDelay);
                 break;
             case 8:
-                follower.followPath(toBase, true);
-                setPathState(9);
+                // Shoot balls
+                if (shootBalls()) {
+                    setPathState(9);
+                }
                 break;
             case 9:
-                checkIfBusy(10);
+                follower.followPath(bottomBalls, true);
+                setPathState(10);
                 break;
             case 10:
+                checkIfBusy(11, pathDelay);
+                break;
+            case 11:
+                // Shoot balls
+                if (shootBalls()) {
+                    setPathState(12);
+                }
+                break;
+            case 12:
+                follower.followPath(toBase, true);
+                setPathState(13);
+                break;
+            case 13:
+                checkIfBusy(14, pathDelay);
+                break;
+            case 14:
                 telemetry.addData("Status", "Auto Complete");
                 break;
+        }
+    }
+
+    /** This method handles the shooting **/
+    private int shootingSubState = 0;
+
+    public boolean shootBalls() {
+        switch (shootingSubState) {
+            case 0:
+                // Charge up the flywheel
+                rotateFlywheel(flywheelSpeed);
+                shootingSubState = 1;
+                pathTimer.resetTimer();
+                return false;
+            case 1:
+                // Wait for flywheel to reach speed
+                if (pathTimer.getElapsedTimeSeconds() > flywheelSpinUpTime) {
+                    servo.setPower(1.0);
+                    shootingSubState = 2;
+                    pathTimer.resetTimer();
+                }
+                return false;
+            case 2:
+                // Wait for shooting to complete
+                if (pathTimer.getElapsedTimeSeconds() > shootingTime) {
+                    servo.setPower(0);
+                    rotateFlywheel(0);
+                    shootingSubState = 0;
+                    return true;
+                }
+                return false;
+            default:
+                return true;
         }
     }
 
@@ -193,9 +251,9 @@ public class AutoMode extends OpMode {
     }
 
     /** This method checks if the path is busy, if not: set the path state **/
-    public void checkIfBusy(int state) {
+    public void checkIfBusy(int state, double delay) {
         if (!follower.isBusy()) {
-            if (pathTimer.getElapsedTimeSeconds() > pathDelay) { // Delay before next part in the pathing
+            if (pathTimer.getElapsedTimeSeconds() > delay) { // Delay before next part in the pathing
                 setPathState(state);
             }
         }
@@ -219,6 +277,8 @@ public class AutoMode extends OpMode {
         flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         flywheel.setVelocityPIDFCoefficients(0,0,0,0);
+
+        servo = hardwareMap.get(CrServo.class, "servo");
     }
 
     /** This method is called continuously after Init while waiting for "play". **/
