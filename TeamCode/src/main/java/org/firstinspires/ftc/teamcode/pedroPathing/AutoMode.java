@@ -49,36 +49,36 @@ public class AutoMode extends OpMode {
         if (selectedTeam == Team.RED) { // Poses for Red team
             middlePose = new Pose(84, 84, Math.toRadians(45));
             ballsPose = new Pose(96, 84, Math.toRadians(0));
-            ballsCapture = new Pose(114, 84, Math.toRadians(0));
+            ballsCapture = new Pose(120, 84, Math.toRadians(0));
             ballsPose2 = new Pose (96, 60, Math.toRadians(0));
-            ballsCapture2 = new Pose(114, 60, Math.toRadians(0));
+            ballsCapture2 = new Pose(120, 60, Math.toRadians(0));
             ballsPose3 = new Pose(96, 36, Math.toRadians(0));
-            ballsCapture3 = new Pose(114, 36, Math.toRadians(0));
-            base = new Pose(105, 33, Math.toRadians(0));
+            ballsCapture3 = new Pose(120, 36, Math.toRadians(0));
+            base = new Pose(38.65, 33.25, Math.toRadians(180));
         } else { // Poses for Blue team
             middlePose = new Pose(60, 84, Math.toRadians(135));
             ballsPose = new Pose(48, 84, Math.toRadians(180));
-            ballsCapture = new Pose(30, 84, Math.toRadians(180));
+            ballsCapture = new Pose(24, 84, Math.toRadians(180));
             ballsPose2 = new Pose (48, 60, Math.toRadians(180));
-            ballsCapture2 = new Pose(30, 60, Math.toRadians(180));
+            ballsCapture2 = new Pose(24, 60, Math.toRadians(180));
             ballsPose3 = new Pose(48, 36, Math.toRadians(180));
-            ballsCapture3 = new Pose(30, 36, Math.toRadians(180));
-            base = new Pose(39, 33, Math.toRadians(180));
+            ballsCapture3 = new Pose(24, 36, Math.toRadians(180));
+            base = new Pose(105.25, 33.25, Math.toRadians(0));
         }
 
         // Set starting positions based on driver input
         switch (startPosition) {
             case 0:
-                startPose = new Pose(24, 120, Math.toRadians(315));
+                startPose = new Pose(24, 125, Math.toRadians(323));
                 break;
             case 1:
-                startPose = new Pose(120, 120, Math.toRadians(225));
+                startPose = new Pose(120, 125, Math.toRadians(217));
                 break;
             case 2:
-                startPose = new Pose(60, 12, Math.toRadians(90));
+                startPose = new Pose(56, 8, Math.toRadians(90));
                 break;
             default:
-                startPose = new Pose(84, 12, Math.toRadians(90));
+                startPose = new Pose(88, 8, Math.toRadians(90));
                 break;
         }
     }
@@ -278,7 +278,7 @@ public class AutoMode extends OpMode {
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         flywheel.setVelocityPIDFCoefficients(0,0,0,0);
 
-        servo = hardwareMap.get(CrServo.class, "servo");
+        servo = hardwareMap.get(CRServo.class, "servo");
     }
 
     /** This method is called continuously after Init while waiting for "play". **/
