@@ -27,7 +27,7 @@ public class TeleOpMode extends OpMode {
     private TelemetryManager telemetryM;
 
     private DcMotorEx flywheel;
-    private CRServo servo;
+    private CRServo leftServo, rightServo;
 
     private boolean isRotatingToTarget = false;
     private double targetHeading = 0;
@@ -45,10 +45,6 @@ public class TeleOpMode extends OpMode {
     // Quick Rotation Angle
     double quickRotationAngle = 180.0;
 
-    // Preset Flywheel Speeds
-    double flywheelPreset = 100;
-    double flywheelPreset2 = 150;
-
     @Override
     public void init() {
         follower = Constants.createFollower(hardwareMap);
@@ -58,7 +54,8 @@ public class TeleOpMode extends OpMode {
 
         // Initialize the flywheel and servo
         flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
-        servo = hardwareMap.get(CRServo.class, "servo");
+        leftServo = hardwareMap.get(CRServo.class, "leftServo");
+        rightServo = hardwareMap.get(CRServo.class, "rightServo");
 
         // Flywheel PIDF tuning
         flywheel.setVelocityPIDFCoefficients(2, 0, 0, 12.55);
@@ -149,29 +146,10 @@ public class TeleOpMode extends OpMode {
         }
 
         // Small Flywheel Control
-        if (gamepad1.right_trigger >= 0.1 && leftBigFlywheel.getVelocity() >= 0) {
-            rotateSmallFlywheel(1);
+        if (gamepad1.right_trigger >= 0.1 &&  flywheel.getVelocity() >= 0) {
+            rotateServos(1.0);
         } else {
-            rotateSmallFlywheel(0);
-        }
-
-        // Speed Adjustment Controls
-        if (gamepad1.xWasPressed()) {
-            flywheelSpeed = flywheelPreset;
-            rotateFlywheel(flywheelPreset);
-        } else if (gamepad1.bWasPressed()) {
-            flywheelSpeed = flywheelPreset2;
-            rotateFlywheel(flywheelPreset2);
-        } else if (gamepad1.yWasPressed()) {
-            if (flywheelSpeed <= 2400) {
-                flywheelSpeed += 50;
-                rotateFlywheel(flywheelSpeed);
-            }
-        } else if (gamepad1.aWasPressed()) {
-            if (flywheelSpeed >= 100) {
-                flywheelSpeed -= 50;
-                rotateFlywheel(flywheelSpeed);
-            }
+            rotateServos(0.0);
         }
 
         telemetryUpdate();
@@ -191,14 +169,10 @@ public class TeleOpMode extends OpMode {
         telemetry.addLine("Left Joystick: Movement");
         telemetry.addLine("Right Joystick: Rotation");
         telemetry.addLine("Right Joystick Button: Rotate 180 degrees clockwise");
-        telemetry.addLine("Right Trigger: Small flywheel");
-        telemetry.addLine("Left Trigger: Big flywheel Toggle");
+        telemetry.addLine("Right Trigger (Hold): Small flywheel");
+        telemetry.addLine("Left Trigger (Click): Big flywheel Toggle");
         telemetry.addLine("D-Pad: Microadjustments for movement");
         telemetry.addLine("Left + Right Bumper: Microadjustments for rotation");
-        telemetry.addLine("X: Decrease default movement speed");
-        telemetry.addLine("B: Increase default movement speed");
-        telemetry.addLine("A: Decrease default flywheel speed");
-        telemetry.addLine("Y: Increase default flywheel speed");
 
         telemetry.update();
     }
@@ -207,8 +181,8 @@ public class TeleOpMode extends OpMode {
         flywheel.setVelocity(speed);
     }
 
-    private void rotateSmallFlywheel(double power) {
-        rightSmallFlywheel.setPower(power);
-        leftSmallFlywheel.setPower(power);
+    private void rotateServos(double power) {
+        leftServo.setPower(power);
+        rightServo.setPower(power);
     }
 }
