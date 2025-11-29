@@ -20,7 +20,7 @@ public class AutoMode extends OpMode {
     private int pathState;
 
     private DcMotorEx flywheel;
-    private CRServo servo;
+    private CRServo leftServo, rightServo;
 
     private enum Team {RED, BLUE};
     private boolean teamSelected = false;
@@ -40,9 +40,9 @@ public class AutoMode extends OpMode {
      */
     private int startPosition = 0;
 
-    private Pose startPose, middlePose, ballsPose, ballsCapture, ballsPose2, ballsCapture2, ballsPose3, ballsCapture3, base;
+    private Pose startPose, middlePose, ballsPose, ballsCapture, ballsPose2, ballsCapture2, ballsPose3, ballsCapture3, lever;
 
-    private PathChain toMiddle, topBalls, middleBalls, bottomBalls, toBase;
+    private PathChain toMiddle, topBalls, middleBalls, bottomBalls, toLever;
 
     private void setPosesForTeam() {
         // Set team poses based on driver input
@@ -54,7 +54,7 @@ public class AutoMode extends OpMode {
             ballsCapture2 = new Pose(120, 60, Math.toRadians(0));
             ballsPose3 = new Pose(96, 36, Math.toRadians(0));
             ballsCapture3 = new Pose(120, 36, Math.toRadians(0));
-            base = new Pose(38.65, 33.25, Math.toRadians(180));
+            lever = new Pose(120, 72, Math.toRadians(0));
         } else { // Poses for Blue team
             middlePose = new Pose(60, 84, Math.toRadians(135));
             ballsPose = new Pose(48, 84, Math.toRadians(180));
@@ -63,7 +63,7 @@ public class AutoMode extends OpMode {
             ballsCapture2 = new Pose(24, 60, Math.toRadians(180));
             ballsPose3 = new Pose(48, 36, Math.toRadians(180));
             ballsCapture3 = new Pose(24, 36, Math.toRadians(180));
-            base = new Pose(105.25, 33.25, Math.toRadians(0));
+            lever = new Pose(24, 72, Math.toRadians(180));
         }
 
         // Set starting positions based on driver input
@@ -121,9 +121,9 @@ public class AutoMode extends OpMode {
                 .build();
 
         // Move to base
-        toBase = follower.pathBuilder()
-                .addPath(new BezierLine(middlePose, base))
-                .setLinearHeadingInterpolation(middlePose.getHeading(), base.getHeading())
+        toLever = follower.pathBuilder()
+                .addPath(new BezierLine(middlePose, lever))
+                .setLinearHeadingInterpolation(middlePose.getHeading(), lever.getHeading())
                 .build();
     }
 
@@ -200,7 +200,7 @@ public class AutoMode extends OpMode {
                 }
                 break;
             case 12:
-                follower.followPath(toBase, true);
+                follower.followPath(toLever, true);
                 setPathState(13);
                 break;
             case 13:
@@ -226,7 +226,8 @@ public class AutoMode extends OpMode {
             case 1:
                 // Wait for flywheel to reach speed
                 if (pathTimer.getElapsedTimeSeconds() > flywheelSpinUpTime) {
-                    servo.setPower(1.0);
+                    leftServo.setPower(1.0);
+                    rightServo.setPower(1.0);
                     shootingSubState = 2;
                     pathTimer.resetTimer();
                 }
@@ -234,7 +235,8 @@ public class AutoMode extends OpMode {
             case 2:
                 // Wait for shooting to complete
                 if (pathTimer.getElapsedTimeSeconds() > shootingTime) {
-                    servo.setPower(0);
+                    leftServo.setPower(0.0);
+                    rightServo.setPower(0.0);
                     rotateFlywheel(0);
                     shootingSubState = 0;
                     return true;
@@ -278,7 +280,8 @@ public class AutoMode extends OpMode {
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         flywheel.setVelocityPIDFCoefficients(0,0,0,0);
 
-        servo = hardwareMap.get(CRServo.class, "servo");
+        leftServo = hardwareMap.get(CRServo.class, "leftServo");
+        rightServo = hardwareMap.get(CRServo.class, "rightServo");
     }
 
     /** This method is called continuously after Init while waiting for "play". **/
