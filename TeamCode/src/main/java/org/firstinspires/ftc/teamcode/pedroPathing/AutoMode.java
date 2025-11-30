@@ -141,6 +141,8 @@ public class AutoMode extends OpMode {
         telemetry.addData("Y", follower.getPose().getY());
         telemetry.addData("Heading", follower.getPose().getHeading());
         telemetry.update();
+
+        Drawing.drawDebug(follower);
     }
 
     // Check for a new autonomous path
@@ -282,6 +284,9 @@ public class AutoMode extends OpMode {
 
         leftServo = hardwareMap.get(CRServo.class, "leftServo");
         rightServo = hardwareMap.get(CRServo.class, "rightServo");
+
+        // Intialize the panels visualizer
+        Drawing.init();
     }
 
     /** This method is called continuously after Init while waiting for "play". **/

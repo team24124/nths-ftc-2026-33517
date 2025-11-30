@@ -152,6 +152,9 @@ public class TeleOpMode extends OpMode {
 
         // Set zero power behaviour of the flywheel
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+        // Intialize the visualizer in panels
+        Drawing.init();
     }
 
     @Override
@@ -302,6 +305,11 @@ public class TeleOpMode extends OpMode {
         telemetry.addLine("Left Trigger (Click): Big flywheel Toggle");
         telemetry.addLine("D-Pad: Microadjustments for movement");
         telemetry.addLine("Left + Right Bumper: Microadjustments for rotation");
+
+        if (teamSelected) {
+            telemetry.addLine("Y: AutoPark");
+            Drawing.drawDebug(follower);
+        }
 
         telemetry.update();
     }
