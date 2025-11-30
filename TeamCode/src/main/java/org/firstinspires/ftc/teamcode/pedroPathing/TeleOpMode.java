@@ -35,8 +35,7 @@ public class TeleOpMode extends OpMode {
     private enum Team {RED, BLUE};
     private Team selectedTeam = Team.RED;
     private boolean teamSelected = false;
-    private boolean autoParking = false;
-    private Pose startPose, basePose;
+    private Pose startPose, basePose, scorePose;
 
     /*
      * 0: Front of blue goal
@@ -45,6 +44,10 @@ public class TeleOpMode extends OpMode {
      * 3: Right of small launch area
      */
     private int startPosition = 0;
+
+    // Driver Assist Toggles
+    private boolean autoParking = false;
+    private boolean autoScoring = false;
 
     // Speed Adjustments
     // Speed multiplier (MAX IS 1)
@@ -58,13 +61,16 @@ public class TeleOpMode extends OpMode {
 
     /** This method configures the starting positions and positioning system **/
     public void setupPosesForTeam() {
+        // Set positions based on selected team
        if (selectedTeam == Team.RED) {
            basePose = new Pose(105.25, 33.25, Math.toRadians(0));
+           scorePose = new Pose(84, 12, Math.toRadians(68));
        } else {
            basePose = new Pose(38.65, 33.25, Math.toRadians(180));
+           scorePose = new Pose(60, 12, Math.toRadians(112));
        }
 
-        // Set starting positions based on driver input
+        // Set starting positions based
         switch (startPosition) {
             case 0:
                 startPose = new Pose(24, 125, Math.toRadians(323));
@@ -153,7 +159,7 @@ public class TeleOpMode extends OpMode {
         // Set zero power behaviour of the flywheel
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
-        // Intialize the visualizer in panels
+        // Initialize the visualizer in panels
         Drawing.init();
     }
 
@@ -196,27 +202,39 @@ public class TeleOpMode extends OpMode {
             turn = microSpeed;
         }
 
-        // Auto Park with toggle
-        if (gamepad1.yWasPressed() && teamSelected) {
-            if (!autoParking) {
-                Path toBase = new Path(new BezierLine(follower.getPose(), basePose));
-                follower.followPath(toBase, true);
-                autoParking = true;
-            } else { // Stop autopark if driver hits Y while an autopark is happening
+        // Auto Score with toggle
+        if (gamepad1.aWasPressed() && teamSelected) {
+            if (!autoScoring && !autoParking) {
+                Path toScore = new Path(new BezierLine(follower.getPose(), scorePose));
+                follower.followPath(toScore, true);
+                autoScoring = true;
+            } else { // Stop AutoScore if driver hits A while AutoScore is happening
                 follower.breakFollowing();
             }
         }
 
-        // Killswitch to cancel autopark if driver makes any moves
-        if (autoParking) {
-            //
+        // Auto Park with toggle
+        if (gamepad1.yWasPressed() && teamSelected) {
+            if (!autoScoring && !autoParking) {
+                Path toBase = new Path(new BezierLine(follower.getPose(), basePose));
+                follower.followPath(toBase, true);
+                autoParking = true;
+            } else { // Stop AutoPark if driver hits Y while an AutoPark is happening
+                follower.breakFollowing();
+            }
+        }
+
+        if (autoParking || autoScoring) {
+            // Killswitch to cancel driver assist if driver makes any manual moves
             if (Math.abs(gamepad1.left_stick_y) >= 0.1 || Math.abs(gamepad1.left_stick_x) >= 0.1 || Math.abs(gamepad1.right_stick_x) >= 0.1) {
                 follower.breakFollowing();
                 autoParking = false;
+                autoScoring = false;
             }
 
             // Check if auto parking has finished
             if (!follower.isBusy()) {
+                autoScoring = false;
                 autoParking = false;
             }
         }
@@ -251,7 +269,7 @@ public class TeleOpMode extends OpMode {
         }
 
         // Set gamepad controls
-        if (!autoParking) {
+        if (!autoParking && !autoScoring) {
             follower.setTeleOpDrive(line, strafe, turn, true);
         }
 
@@ -287,13 +305,14 @@ public class TeleOpMode extends OpMode {
         telemetry.addData("Flywheel Real-Time Velocity", flywheel.getVelocity());
 
         if (teamSelected) {
-            telemetry.addLine("\n====AUTOPARK AND POSITIONING SYSTEM====");
+            telemetry.addLine("\n====DRIVER ASSIST & POSITIONING SYSTEM====");
             telemetry.addData("Current Heading (deg)", Math.toDegrees(follower.getPose().getHeading()));
             telemetry.addData("X", follower.getPose().getX());
             telemetry.addData("Y", follower.getPose().getY());
             telemetry.addData("AutoPark Status", (autoParking ? "Parking.." : "Idle"));
+            telemetry.addData("AutoScore Status", (autoScoring ? "Scoring.." : "Idle"));
         } else {
-            telemetry.addData("AutoPark & Positioning System", "UNAVAILABLE");
+            telemetry.addData("Driver Assist & Positioning System", "UNAVAILABLE");
         }
 
         // Controls Manual
@@ -308,6 +327,7 @@ public class TeleOpMode extends OpMode {
 
         if (teamSelected) {
             telemetry.addLine("Y: AutoPark");
+            telemetry.addLine("A: AutoScore");
             Drawing.drawDebug(follower);
         }
 
