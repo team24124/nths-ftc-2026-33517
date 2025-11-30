@@ -3,7 +3,7 @@ Programmers on this team MUST follow the Standard Operating Procedure for making
 
 # NTHS Nighthawks Robotics (2025-2026 *Decode*)
 
-Github repository containing Team Code that will be utilized by FTC Team 33571 (Nighthawks Robotics) for use in the 2025-2026 season of the FIRST Tech Challenge, *Decode*.
+Github repository containing Team Code that will be utilized by FTC Team 33571 (New Horizons) from Nighthawks Robotics for use in the 2025-2026 season of the FIRST Tech Challenge, *Decode*.
 
 # Branch Information
 The *master* branch contains the latest files that are stable
