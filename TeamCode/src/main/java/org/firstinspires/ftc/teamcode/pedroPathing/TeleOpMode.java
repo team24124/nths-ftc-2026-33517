@@ -22,7 +22,7 @@ public class TeleOpMode extends OpMode {
     private Follower follower;
     private TelemetryManager telemetryM;
 
-    private DcMotorEx flywheel;
+    private DcMotorEx flywheel, flywheel2;
     private CRServo leftServo, rightServo;
 
     private boolean isRotatingToTarget = false;
@@ -150,14 +150,22 @@ public class TeleOpMode extends OpMode {
 
         // Initialize the flywheel and servo
         flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
-        leftServo = hardwareMap.get(CRServo.class, "leftServo");
-        rightServo = hardwareMap.get(CRServo.class, "rightServo");
+        flywheel2 = hardwareMap.get(DcMotorEx.class, "flywheel2");
+        //leftServo = hardwareMap.get(CRServo.class, "leftServo");
+        //rightServo = hardwareMap.get(CRServo.class, "rightServo");
 
         // Flywheel PIDF tuning
-        flywheel.setVelocityPIDFCoefficients(2, 0, 0, 12.55);
+        double p = 2.0;
+        double i = 0.0;
+        double d = 0.0;
+        double f = 12.55;
+
+        flywheel.setVelocityPIDFCoefficients(p, i, d, f);
+        flywheel2.setVelocityPIDFCoefficients(p, i, d, f);
 
         // Set zero power behaviour of the flywheel
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        flywheel2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         // Initialize the visualizer in panels
         Drawing.init();
@@ -287,9 +295,9 @@ public class TeleOpMode extends OpMode {
 
         // Small Flywheel Control
         if (gamepad1.right_trigger >= 0.1 &&  flywheel.getVelocity() >= 0) {
-            rotateServos(1.0);
+            //rotateServos(1.0);
         } else {
-            rotateServos(0.0);
+            //rotateServos(0.0);
         }
 
         telemetryUpdate();
