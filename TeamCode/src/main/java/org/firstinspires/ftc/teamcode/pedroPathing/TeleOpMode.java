@@ -5,17 +5,13 @@ import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.Path;
-import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.Servo;
 
 
 import java.util.function.Supplier;
@@ -35,6 +31,21 @@ public class TeleOpMode extends OpMode {
     private boolean leftStickPressed = false;
     private boolean debounce = false;
 
+    // Positioning info
+    private enum Team {RED, BLUE};
+    private Team selectedTeam = Team.RED;
+    private boolean teamSelected = false;
+    private boolean autoParking = false;
+    private Pose startPose, basePose;
+
+    /*
+     * 0: Front of blue goal
+     * 1: Front of red goal
+     * 2: Left of small launch area
+     * 3: Right of small launch area
+     */
+    private int startPosition = 0;
+
     // Speed Adjustments
     // Speed multiplier (MAX IS 1)
     double microSpeed = 0.10; // for micro adjustment speed
@@ -44,6 +55,85 @@ public class TeleOpMode extends OpMode {
 
     // Quick Rotation Angle
     double quickRotationAngle = 180.0;
+
+    /** This method configures the starting positions and positioning system **/
+    public void setupPosesForTeam() {
+       if (selectedTeam == Team.RED) {
+           basePose = new Pose(105.25, 33.25, Math.toRadians(0));
+       } else {
+           basePose = new Pose(38.65, 33.25, Math.toRadians(180));
+       }
+
+        // Set starting positions based on driver input
+        switch (startPosition) {
+            case 0:
+                startPose = new Pose(24, 125, Math.toRadians(323));
+                break;
+            case 1:
+                startPose = new Pose(120, 125, Math.toRadians(217));
+                break;
+            case 2:
+                startPose = new Pose(56, 8, Math.toRadians(90));
+                break;
+            default:
+                startPose = new Pose(88, 8, Math.toRadians(90));
+                break;
+        }
+    }
+
+    @Override
+    public void init_loop() {
+        telemetry.addLine("====AUTOPARK CONFIGURATION====");
+        telemetry.addLine("! To enable autopark and position tracking, you need to select a start position !");
+        telemetry.addLine("! This feature is optional, however, you will not be able to use autopark or view your position/heading!");
+        telemetry.addLine();
+        telemetry.addLine("X: Front of the Blue Goal");
+        telemetry.addLine("Y: Front of the Red Goal");
+        telemetry.addLine("A: Left of the Small Launch Area");
+        telemetry.addLine("B: Right of the Small Launch Area");
+        telemetry.addLine();
+
+        // Set status message based on position selection
+        if (teamSelected) { // Team and starting position was selected
+            switch (startPosition) {
+                case 0:
+                    telemetry.addLine("STATUS: Starting at the front of the BLUE goal");
+                    break;
+                case 1:
+                    telemetry.addLine("STATUS: Starting at the front of the RED goal");
+                    break;
+                case 2:
+                    telemetry.addLine("STATUS: Starting at the BLUE small launch area");
+                    break;
+                default:
+                    telemetry.addLine("STATUS: Starting at the RED small launch area");
+                    break;
+            }
+        } else { // Team and starting position was not selected
+            telemetry.addLine("STATUS: Waiting..");
+        }
+
+        // Controls to select team
+        if (!teamSelected) {
+            if (gamepad1.x) {
+                selectedTeam = Team.BLUE;
+                startPosition = 0;
+                teamSelected = true;
+            } else if (gamepad1.y) {
+                selectedTeam = Team.RED;
+                startPosition = 1;
+                teamSelected = true;
+            }  else if (gamepad1.a) {
+                selectedTeam = Team.BLUE;
+                startPosition = 2;
+                teamSelected = true;
+            } else if (gamepad1.b) {
+                selectedTeam = Team.RED;
+                startPosition = 3;
+                teamSelected = true;
+            }
+        }
+    }
 
     @Override
     public void init() {
@@ -66,6 +156,8 @@ public class TeleOpMode extends OpMode {
 
     @Override
     public void start() {
+        setupPosesForTeam();
+        follower.setStartingPose(startPose);
         follower.startTeleopDrive();
     }
 
@@ -101,6 +193,31 @@ public class TeleOpMode extends OpMode {
             turn = microSpeed;
         }
 
+        // Auto Park with toggle
+        if (gamepad1.yWasPressed() && teamSelected) {
+            if (!autoParking) {
+                Path toBase = new Path(new BezierLine(follower.getPose(), basePose));
+                follower.followPath(toBase, true);
+                autoParking = true;
+            } else { // Stop autopark if driver hits Y while an autopark is happening
+                follower.breakFollowing();
+            }
+        }
+
+        // Killswitch to cancel autopark if driver makes any moves
+        if (autoParking) {
+            //
+            if (Math.abs(gamepad1.left_stick_y) >= 0.1 || Math.abs(gamepad1.left_stick_x) >= 0.1 || Math.abs(gamepad1.right_stick_x) >= 0.1) {
+                follower.breakFollowing();
+                autoParking = false;
+            }
+
+            // Check if auto parking has finished
+            if (!follower.isBusy()) {
+                autoParking = false;
+            }
+        }
+
         // Quick Rotation Control
         if (gamepad1.right_stick_button && !rightStickPressed && !isRotatingToTarget) {
             rightStickPressed = true;
@@ -131,7 +248,9 @@ public class TeleOpMode extends OpMode {
         }
 
         // Set gamepad controls
-        follower.setTeleOpDrive(line, strafe, turn, true);
+        if (!autoParking) {
+            follower.setTeleOpDrive(line, strafe, turn, true);
+        }
 
         // Big Flywheel Control
         if (gamepad1.left_trigger >= 0.5 && !debounce) {
@@ -155,14 +274,24 @@ public class TeleOpMode extends OpMode {
         telemetryUpdate();
     }
 
+    /** This method updates the telemetry information on the driver hub/panels **/
     private void telemetryUpdate() {
         // Info
         telemetry.addLine("====ROBOT INFO====");
-        telemetry.addData("Current Heading (deg)", Math.toDegrees(follower.getPose().getHeading()));
         telemetry.addData("Movement Speed", regularSpeed);
         telemetry.addData("Turning Speed", turnSpeed);
         telemetry.addData("Flywheel Targeted Velocity", flywheelSpeed);
         telemetry.addData("Flywheel Real-Time Velocity", flywheel.getVelocity());
+
+        if (teamSelected) {
+            telemetry.addLine("\n====AUTOPARK AND POSITIONING SYSTEM====");
+            telemetry.addData("Current Heading (deg)", Math.toDegrees(follower.getPose().getHeading()));
+            telemetry.addData("X", follower.getPose().getX());
+            telemetry.addData("Y", follower.getPose().getY());
+            telemetry.addData("AutoPark Status", (autoParking ? "Parking.." : "Idle"));
+        } else {
+            telemetry.addData("AutoPark & Positioning System", "UNAVAILABLE");
+        }
 
         // Controls Manual
         telemetry.addLine("\n====CONTROLS====");
