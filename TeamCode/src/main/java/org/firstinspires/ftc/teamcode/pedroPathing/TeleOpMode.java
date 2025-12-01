@@ -6,6 +6,7 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.Path;
+import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -63,14 +64,14 @@ public class TeleOpMode extends OpMode {
     public void setupPosesForTeam() {
         // Set positions based on selected team
        if (selectedTeam == Team.RED) {
-           basePose = new Pose(105.25, 33.25, Math.toRadians(0));
+           basePose = new Pose(38.65, 33.25, Math.toRadians(180));
            scorePose = new Pose(84, 12, Math.toRadians(68));
        } else {
-           basePose = new Pose(38.65, 33.25, Math.toRadians(180));
+           basePose = new Pose(105, 33, Math.toRadians(0));
            scorePose = new Pose(60, 12, Math.toRadians(112));
        }
 
-        // Set starting positions based
+        // Set starting positions
         switch (startPosition) {
             case 0:
                 startPose = new Pose(24, 125, Math.toRadians(323));
@@ -79,10 +80,10 @@ public class TeleOpMode extends OpMode {
                 startPose = new Pose(120, 125, Math.toRadians(217));
                 break;
             case 2:
-                startPose = new Pose(56, 8, Math.toRadians(90));
+                startPose = new Pose(57, 9.5, Math.toRadians(90));
                 break;
             default:
-                startPose = new Pose(88, 8, Math.toRadians(90));
+                startPose = new Pose(86.5, 9.5, Math.toRadians(90));
                 break;
         }
     }
@@ -151,8 +152,8 @@ public class TeleOpMode extends OpMode {
         // Initialize the flywheel and servo
         flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
         flywheel2 = hardwareMap.get(DcMotorEx.class, "flywheel2");
-        //leftServo = hardwareMap.get(CRServo.class, "leftServo");
-        //rightServo = hardwareMap.get(CRServo.class, "rightServo");
+        leftServo = hardwareMap.get(CRServo.class, "leftServo");
+        rightServo = hardwareMap.get(CRServo.class, "rightServo");
 
         // Flywheel PIDF tuning
         double p = 2.0;
@@ -213,7 +214,10 @@ public class TeleOpMode extends OpMode {
         // Auto Score with toggle
         if (gamepad1.aWasPressed() && teamSelected) {
             if (!autoScoring && !autoParking) {
-                Path toScore = new Path(new BezierLine(follower.getPose(), scorePose));
+                PathChain toScore = follower.pathBuilder()
+                        .addPath(new BezierLine(follower.getPose(), scorePose))
+                        .setLinearHeadingInterpolation(follower.getPose().getHeading(), scorePose.getHeading())
+                        .build();
                 follower.followPath(toScore, true);
                 autoScoring = true;
             } else { // Stop AutoScore if driver hits A while AutoScore is happening
@@ -224,7 +228,10 @@ public class TeleOpMode extends OpMode {
         // Auto Park with toggle
         if (gamepad1.yWasPressed() && teamSelected) {
             if (!autoScoring && !autoParking) {
-                Path toBase = new Path(new BezierLine(follower.getPose(), basePose));
+                PathChain toBase = follower.pathBuilder()
+                        .addPath(new BezierLine(follower.getPose(), basePose))
+                        .setLinearHeadingInterpolation(follower.getPose().getHeading(), basePose.getHeading())
+                        .build();
                 follower.followPath(toBase, true);
                 autoParking = true;
             } else { // Stop AutoPark if driver hits Y while an AutoPark is happening
@@ -238,12 +245,15 @@ public class TeleOpMode extends OpMode {
                 follower.breakFollowing();
                 autoParking = false;
                 autoScoring = false;
+                follower.startTeleopDrive();
             }
 
             // Check if auto parking has finished
             if (!follower.isBusy()) {
                 autoScoring = false;
                 autoParking = false;
+                isRotatingToTarget = false;
+                follower.startTeleopDrive();
             }
         }
 
@@ -295,9 +305,9 @@ public class TeleOpMode extends OpMode {
 
         // Small Flywheel Control
         if (gamepad1.right_trigger >= 0.1 &&  flywheel.getVelocity() >= 0) {
-            //rotateServos(1.0);
+            rotateServos(1.0);
         } else {
-            //rotateServos(0.0);
+            rotateServos(0.0);
         }
 
         telemetryUpdate();
@@ -344,6 +354,7 @@ public class TeleOpMode extends OpMode {
 
     private void rotateFlywheel(double speed) {
         flywheel.setVelocity(speed);
+        flywheel2.setVelocity(speed);
     }
 
     private void rotateServos(double power) {

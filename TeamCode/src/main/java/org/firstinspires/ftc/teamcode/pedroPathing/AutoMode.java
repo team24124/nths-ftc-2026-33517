@@ -75,10 +75,10 @@ public class AutoMode extends OpMode {
                 startPose = new Pose(120, 125, Math.toRadians(217));
                 break;
             case 2:
-                startPose = new Pose(56, 8, Math.toRadians(90));
+                startPose = new Pose(57, 9.5, Math.toRadians(90));
                 break;
             default:
-                startPose = new Pose(88, 8, Math.toRadians(90));
+                startPose = new Pose(86.5, 9.5, Math.toRadians(90));
                 break;
         }
     }
