@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 
 import java.util.function.Supplier;
@@ -23,7 +24,7 @@ public class TeleOpMode extends OpMode {
     private Follower follower;
     private TelemetryManager telemetryM;
 
-    private DcMotorEx flywheel, flywheel2;
+    private DcMotorEx flywheel, flywheel2, intake;
     private CRServo leftServo, rightServo;
 
     private boolean isRotatingToTarget = false;
@@ -31,6 +32,7 @@ public class TeleOpMode extends OpMode {
     private boolean rightStickPressed = false;
     private boolean leftStickPressed = false;
     private boolean debounce = false;
+    private boolean intakeToggle = false;
 
     // Positioning info
     private enum Team {RED, BLUE};
@@ -55,7 +57,7 @@ public class TeleOpMode extends OpMode {
     double microSpeed = 0.10; // for micro adjustment speed
     double regularSpeed = 0.80; // for regular movement speed
     double turnSpeed = 0.50; // for rotation speed
-    double flywheelSpeed = 200; // for flywheel speed
+    double flywheelSpeed = 1200; // for flywheel speed
 
     // Quick Rotation Angle
     double quickRotationAngle = 180.0;
@@ -149,24 +151,30 @@ public class TeleOpMode extends OpMode {
         follower.update();
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
 
-        // Initialize the flywheel and servo
+        // Initialize the flywheel, servos, and intake
         flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
         flywheel2 = hardwareMap.get(DcMotorEx.class, "flywheel2");
         leftServo = hardwareMap.get(CRServo.class, "leftServo");
         rightServo = hardwareMap.get(CRServo.class, "rightServo");
+        intake = hardwareMap.get(DcMotorEx.class, "intake");
 
         // Flywheel PIDF tuning
-        double p = 2.0;
+        double p = 0.0;
         double i = 0.0;
         double d = 0.0;
-        double f = 12.55;
+        double f = 0.0;
 
-        flywheel.setVelocityPIDFCoefficients(p, i, d, f);
-        flywheel2.setVelocityPIDFCoefficients(p, i, d, f);
+        //flywheel.setVelocityPIDFCoefficients(p, i, d, f);
+        //flywheel2.setVelocityPIDFCoefficients(p, i, d, f);
 
         // Set zero power behaviour of the flywheel
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         flywheel2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+        // Reverse direction
+        flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
+        intake.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftServo.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Initialize the visualizer in panels
         Drawing.init();
@@ -209,6 +217,31 @@ public class TeleOpMode extends OpMode {
             turn = -microSpeed;
         } else if (gamepad1.left_bumper) {
             turn = microSpeed;
+        }
+
+        // Intake toggle
+        if (gamepad1.bWasPressed()) {
+            if (intake.getPower() == 0) {
+                intakeToggle = true;
+                intake.setPower(1);
+            } else {
+                intakeToggle = false;
+                intake.setPower(0);
+            }
+        }
+
+        // Intake direction toggle
+        if (gamepad1.xWasPressed()) {
+            if (intake.getDirection() == DcMotorEx.Direction.REVERSE) {
+                intake.setDirection(DcMotorEx.Direction.FORWARD);
+            } else {
+                intake.setDirection(DcMotorEx.Direction.REVERSE);
+            }
+
+            if (intake.getPower() == 1.0) {
+                intake.setPower(0.0);
+                intake.setPower(1.0);
+            }
         }
 
         // Auto Score with toggle
@@ -304,9 +337,17 @@ public class TeleOpMode extends OpMode {
         }
 
         // Small Flywheel Control
-        if (gamepad1.right_trigger >= 0.1 &&  flywheel.getVelocity() >= 0) {
+        if (gamepad1.right_trigger >= 0.1 && flywheel.getVelocity() >= 0) {
+            if (!intakeToggle) {
+                intake.setPower(1.0);
+            }
+
             rotateServos(1.0);
         } else {
+            if (!intakeToggle) {
+                intake.setPower(0.0);
+            }
+
             rotateServos(0.0);
         }
 
@@ -321,6 +362,8 @@ public class TeleOpMode extends OpMode {
         telemetry.addData("Turning Speed", turnSpeed);
         telemetry.addData("Flywheel Targeted Velocity", flywheelSpeed);
         telemetry.addData("Flywheel Real-Time Velocity", flywheel.getVelocity());
+        telemetry.addData("Intake Status", (intake.getPower()) == 0 ? "Off" : "On");
+        telemetry.addData("Intake Direction", (intake.getDirection() == DcMotorSimple.Direction.FORWARD ? "Forward" : "Reversed"));
 
         if (teamSelected) {
             telemetry.addLine("\n====DRIVER ASSIST & POSITIONING SYSTEM====");
