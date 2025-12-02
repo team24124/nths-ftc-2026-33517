@@ -27,12 +27,23 @@ public class TeleOpMode extends OpMode {
     private DcMotorEx flywheel, flywheel2, intake;
     private CRServo leftServo, rightServo;
 
+    /** Constants **/
+    double microSpeed = 0.10; // for micro adjustment speed
+    double regularSpeed = 0.80; // for regular movement speed
+    double turnSpeed = 0.50; // for rotation speed
+    double flywheelSpeed = 1650; // for flywheel speed
+    int rumbleTime = 250; // in milliseconds
+
     private boolean isRotatingToTarget = false;
     private double targetHeading = 0;
     private boolean rightStickPressed = false;
     private boolean leftStickPressed = false;
     private boolean debounce = false;
+    private boolean reachedVelocity = false;
+
+    // Intake control
     private boolean intakeToggle = false;
+    private double intakePower = 1.0; // 1.0 = forward & -1.0 = reverse
 
     // Positioning info
     private enum Team {RED, BLUE};
@@ -51,13 +62,6 @@ public class TeleOpMode extends OpMode {
     // Driver Assist Toggles
     private boolean autoParking = false;
     private boolean autoScoring = false;
-
-    // Speed Adjustments
-    // Speed multiplier (MAX IS 1)
-    double microSpeed = 0.10; // for micro adjustment speed
-    double regularSpeed = 0.80; // for regular movement speed
-    double turnSpeed = 0.50; // for rotation speed
-    double flywheelSpeed = 1650; // for flywheel speed
 
     // Quick Rotation Angle
     double quickRotationAngle = 180.0;
@@ -223,7 +227,7 @@ public class TeleOpMode extends OpMode {
         if (gamepad1.bWasPressed()) {
             if (intake.getPower() == 0.0) {
                 intakeToggle = true;
-                intake.setPower(1.0);
+                intake.setPower(intakePower);
             } else {
                 intakeToggle = false;
                 intake.setPower(0.0);
@@ -232,16 +236,53 @@ public class TeleOpMode extends OpMode {
 
         // Intake direction toggle
         if (gamepad1.xWasPressed()) {
-            if (intake.getDirection() == DcMotorEx.Direction.REVERSE) {
-                intake.setDirection(DcMotorEx.Direction.FORWARD);
+            intakePower = -intakePower;
+
+            if (intakeToggle) {
+                intake.setPower(intakePower);
+            }
+        }
+
+        // Set gamepad controls
+        if (!autoParking && !autoScoring) {
+            follower.setTeleOpDrive(line, strafe, turn, true);
+        }
+
+        // Big Flywheel Control
+        if (gamepad1.left_trigger >= 0.5 && !debounce) {
+            debounce = true;
+            if (flywheel.getVelocity() == 0) {
+                rotateFlywheel(flywheelSpeed);
             } else {
-                intake.setDirection(DcMotorEx.Direction.REVERSE);
+                rotateFlywheel(0);
+            }
+        } else if (gamepad1.left_trigger < 0.5) {
+            debounce = false;
+        }
+
+        // Check if up to speed
+        if (flywheel.getVelocity() >= flywheelSpeed && !reachedVelocity) {
+            gamepad1.rumble(rumbleTime); // Let driver know flywheel is up to speed
+            reachedVelocity = true;
+        } else if (flywheel.getVelocity() < flywheelSpeed / 2 && reachedVelocity) {
+            reachedVelocity = false;
+        }
+
+        // Small Flywheel Control
+        if (gamepad1.right_trigger >= 0.1 && flywheel.getVelocity() >= 0) {
+            if (!intakeToggle) {
+                intake.setPower(intakePower);
             }
 
-            if (intake.getPower() == 1.0) {
-                intake.setPower(0.0);
-                intake.setPower(1.0);
+            if (flywheel.getVelocity() > flywheelSpeed / 2) {
+                rotateServos(1.0);
             }
+        } else {
+            if (!intakeToggle) {
+                intake.setPower(0.0);
+            }
+
+            rotateServos(0.0);
         }
 
         // Auto Score with toggle
@@ -253,8 +294,9 @@ public class TeleOpMode extends OpMode {
                         .build();
                 follower.followPath(toScore, true);
                 autoScoring = true;
+                gamepad1.rumble(rumbleTime);
             } else { // Stop AutoScore if driver hits A while AutoScore is happening
-                follower.breakFollowing();
+                resetStates();
             }
         }
 
@@ -267,26 +309,22 @@ public class TeleOpMode extends OpMode {
                         .build();
                 follower.followPath(toBase, true);
                 autoParking = true;
+                gamepad1.rumble(rumbleTime);
             } else { // Stop AutoPark if driver hits Y while an AutoPark is happening
-                follower.breakFollowing();
+                resetStates();
             }
         }
 
         if (autoParking || autoScoring) {
-            // Killswitch to cancel driver assist if driver makes any manual moves
+            // Kill Switch to cancel driver assist if driver makes any joystick moves
             if (Math.abs(gamepad1.left_stick_y) >= 0.1 || Math.abs(gamepad1.left_stick_x) >= 0.1 || Math.abs(gamepad1.right_stick_x) >= 0.1) {
-                follower.breakFollowing();
-                autoParking = false;
-                autoScoring = false;
-                follower.startTeleopDrive();
+                resetStates();
             }
 
-            // Check if auto parking has finished
+            // Check if auto pathing has finished
             if (!follower.isBusy()) {
-                autoScoring = false;
-                autoParking = false;
-                isRotatingToTarget = false;
-                follower.startTeleopDrive();
+                gamepad1.rumble(rumbleTime);
+                resetStates();
             }
         }
 
@@ -319,39 +357,15 @@ public class TeleOpMode extends OpMode {
             }
         }
 
-        // Set gamepad controls
-        if (!autoParking && !autoScoring) {
-            follower.setTeleOpDrive(line, strafe, turn, true);
-        }
-
-        // Big Flywheel Control
-        if (gamepad1.left_trigger >= 0.5 && !debounce) {
-            debounce = true;
-            if (flywheel.getVelocity() == 0) {
-                rotateFlywheel(flywheelSpeed);
-            } else {
-                rotateFlywheel(0);
-            }
-        } else if (gamepad1.left_trigger < 0.5) {
-            debounce = false;
-        }
-
-        // Small Flywheel Control
-        if (gamepad1.right_trigger >= 0.1 && flywheel.getVelocity() >= 0) {
-            if (!intakeToggle) {
-                intake.setPower(1.0);
-            }
-
-            rotateServos(1.0);
-        } else {
-            if (!intakeToggle) {
-                intake.setPower(0.0);
-            }
-
-            rotateServos(0.0);
-        }
-
         telemetryUpdate();
+    }
+
+    /** This method resets the state of any autonomous teleop features **/
+    private void resetStates() {
+        follower.breakFollowing();
+        autoParking = false;
+        autoScoring = false;
+        follower.startTeleopDrive();
     }
 
     /** This method updates the telemetry information on the driver hub/panels **/
@@ -363,7 +377,7 @@ public class TeleOpMode extends OpMode {
         telemetry.addData("Flywheel Targeted Velocity", flywheelSpeed);
         telemetry.addData("Flywheel Real-Time Velocity", flywheel.getVelocity());
         telemetry.addData("Intake Status", (intake.getPower()) == 0 ? "Off" : "On");
-        telemetry.addData("Intake Direction", (intake.getDirection() == DcMotorSimple.Direction.FORWARD ? "Forward" : "Reversed"));
+        telemetry.addData("Intake Direction", (intakePower >= 0.0 ? "Forward" : "Reversed"));
 
         if (teamSelected) {
             telemetry.addLine("\n====DRIVER ASSIST & POSITIONING SYSTEM====");
@@ -385,7 +399,7 @@ public class TeleOpMode extends OpMode {
         telemetry.addLine("Left Trigger (Click): Big flywheel Toggle");
         telemetry.addLine("D-Pad: Microadjustments for movement");
         telemetry.addLine("Left + Right Bumper: Microadjustments for rotation");
-        telemetry.addLine("Left Action Button: Reverse Intake Direction");
+        telemetry.addLine("Left Action Button: Flip Intake Direction");
         telemetry.addLine("Right Action Button: Toggle Intake");
 
         if (teamSelected) {
