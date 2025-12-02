@@ -31,7 +31,7 @@ public class TeleOpMode extends OpMode {
     double microSpeed = 0.10; // for micro adjustment speed
     double regularSpeed = 0.80; // for regular movement speed
     double turnSpeed = 0.50; // for rotation speed
-    double flywheelSpeed = 1600.0; // for flywheel speed
+    double flywheelSpeed = 1625.0; // for flywheel speed
     int rumbleTime = 250; // in milliseconds
 
     private boolean isRotatingToTarget = false;
@@ -71,10 +71,10 @@ public class TeleOpMode extends OpMode {
         // Set positions based on selected team
        if (selectedTeam == Team.RED) {
            basePose = new Pose(38.65, 33.25, Math.toRadians(180));
-           scorePose = new Pose(72, 135.25, Math.toRadians(0));
+           scorePose = new Pose(72, 132, Math.toRadians(0));
        } else {
            basePose = new Pose(105, 33, Math.toRadians(0));
-           scorePose = new Pose(72, 135.25, Math.toRadians(180));
+           scorePose = new Pose(72, 132, Math.toRadians(180));
        }
 
         // Set starting positions
@@ -165,8 +165,8 @@ public class TeleOpMode extends OpMode {
         // Flywheel PIDF tuning
         double p = 1.0;
         double i = 0.0;
-        double d = 0.3;
-        double f = 12.8;
+        double d = 0.0;
+        double f = 12.3;
 
         flywheel.setVelocityPIDFCoefficients(p, i, d, f);
         flywheel2.setVelocityPIDFCoefficients(p, i, d, f);
@@ -264,7 +264,7 @@ public class TeleOpMode extends OpMode {
         if (flywheel.getVelocity() >= flywheelSpeed && !reachedVelocity) {
             gamepad1.rumble(rumbleTime); // Let driver know flywheel is up to speed
             reachedVelocity = true;
-        } else if (flywheel.getVelocity() < flywheelSpeed / 2 && reachedVelocity) {
+        } else if (flywheel.getVelocity() < flywheelSpeed && reachedVelocity) {
             reachedVelocity = false;
         }
 

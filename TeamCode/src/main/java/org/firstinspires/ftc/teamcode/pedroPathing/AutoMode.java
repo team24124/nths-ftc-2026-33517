@@ -21,8 +21,8 @@ public class AutoMode extends OpMode {
     private int pathState;
 
     // Constants
-    private double flywheelSpeed = 1650.0; // Default flywheel speed
-    private double shootingTime = 10.0; // Time to shoot all 3 balls (s)
+    private double flywheelSpeed = 1600.0; // Default flywheel speed
+    private double shootingTime = 6.0; // Time to shoot all 3 balls (s)
 
     private DcMotorEx flywheel, flywheel2, intake;
     private CRServo leftServo, rightServo;
@@ -46,7 +46,7 @@ public class AutoMode extends OpMode {
     private void setPosesForTeam() {
         // Set team poses based on driver input
         if (selectedTeam == Team.RED) { // Poses for Red team
-            middlePose = new Pose(84, 84, Math.toRadians(47));
+            middlePose = new Pose(84, 84, Math.toRadians(42));
             ballsPose = new Pose(96, 84, Math.toRadians(0));
             ballsCapture = new Pose(120, 84, Math.toRadians(0));
             ballsPose2 = new Pose (96, 60, Math.toRadians(0));
@@ -55,13 +55,13 @@ public class AutoMode extends OpMode {
             ballsCapture3 = new Pose(120, 36, Math.toRadians(0));
             lever = new Pose(120, 72, Math.toRadians(0));
         } else { // Poses for Blue team
-            middlePose = new Pose(60, 84, Math.toRadians(133));
+            middlePose = new Pose(60, 84, Math.toRadians(138));
             ballsPose = new Pose(48, 84, Math.toRadians(180));
-            ballsCapture = new Pose(24, 84, Math.toRadians(180));
-            ballsPose2 = new Pose (48, 60, Math.toRadians(180));
-            ballsCapture2 = new Pose(24, 60, Math.toRadians(180));
-            ballsPose3 = new Pose(48, 36, Math.toRadians(180));
-            ballsCapture3 = new Pose(24, 36, Math.toRadians(180));
+            ballsCapture = new Pose(22, 84, Math.toRadians(180));
+            ballsPose2 = new Pose (48, 59, Math.toRadians(180));
+            ballsCapture2 = new Pose(18, 59, Math.toRadians(180));
+            ballsPose3 = new Pose(48, 38, Math.toRadians(180));
+            ballsCapture3 = new Pose(17, 38, Math.toRadians(180));
             lever = new Pose(24, 72, Math.toRadians(180));
         }
 
@@ -144,8 +144,8 @@ public class AutoMode extends OpMode {
         // Flywheel PIDF tuning
         double p = 1.0;
         double i = 0.0;
-        double d = 0.2;
-        double f = 13.0;
+        double d = 0.0;
+        double f = 12.3;
 
         flywheel.setVelocityPIDFCoefficients(p, i, d, f);
         flywheel2.setVelocityPIDFCoefficients(p, i, d, f);
