@@ -80,10 +80,10 @@ public class TeleOpMode extends OpMode {
         // Set starting positions
         switch (startPosition) {
             case 0:
-                startPose = new Pose(24, 125, Math.toRadians(323));
+                startPose = new Pose(22.25, 125, Math.toRadians(324));
                 break;
             case 1:
-                startPose = new Pose(120, 125, Math.toRadians(217));
+                startPose = new Pose(5, 125, Math.toRadians(217));
                 break;
             case 2:
                 startPose = new Pose(56.75, 8.5, Math.toRadians(90));
