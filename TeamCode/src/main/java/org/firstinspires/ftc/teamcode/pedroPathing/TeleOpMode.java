@@ -67,10 +67,10 @@ public class TeleOpMode extends OpMode {
         // Set positions based on selected team
        if (selectedTeam == Team.RED) {
            basePose = new Pose(38.65, 33.25, Math.toRadians(180));
-           scorePose = new Pose(72, 132, Math.toRadians(0));
+           scorePose = new Pose(72, 135.25, Math.toRadians(0));
        } else {
            basePose = new Pose(105, 33, Math.toRadians(0));
-           scorePose = new Pose(72, 132, Math.toRadians(180));
+           scorePose = new Pose(72, 135.25, Math.toRadians(180));
        }
 
         // Set starting positions
@@ -92,9 +92,9 @@ public class TeleOpMode extends OpMode {
 
     @Override
     public void init_loop() {
-        telemetry.addLine("====AUTOPARK CONFIGURATION====");
-        telemetry.addLine("! To enable autopark and position tracking, you need to select a start position !");
-        telemetry.addLine("! This feature is optional, however, you will not be able to use autopark or view your position/heading!");
+        telemetry.addLine("====DRIVER ASSIST & POSITIONING CONFIGURATION====");
+        telemetry.addLine("! To enable driver assist and positioning tracking, you need to select a start position !");
+        telemetry.addLine("! This configuration is optional, however, you will not be able to use these features !");
         telemetry.addLine();
         telemetry.addLine("Left Action Button: Front of the Blue Goal");
         telemetry.addLine("Top Action Button: Front of the Red Goal");
@@ -221,12 +221,12 @@ public class TeleOpMode extends OpMode {
 
         // Intake toggle
         if (gamepad1.bWasPressed()) {
-            if (intake.getPower() == 0) {
+            if (intake.getPower() == 0.0) {
                 intakeToggle = true;
-                intake.setPower(1);
+                intake.setPower(1.0);
             } else {
                 intakeToggle = false;
-                intake.setPower(0);
+                intake.setPower(0.0);
             }
         }
 
