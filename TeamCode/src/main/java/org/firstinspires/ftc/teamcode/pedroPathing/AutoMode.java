@@ -296,10 +296,10 @@ public class AutoMode extends OpMode {
         telemetry.addLine("! Selecting where the robot starts on the field determines its autonomous path !");
         telemetry.addLine("! Connect your controller to select a position !");
         telemetry.addLine();
-        telemetry.addLine("X: Front of the Blue Goal");
-        telemetry.addLine("Y: Front of the Red Goal");
-        telemetry.addLine("A: Left of the Small Launch Area");
-        telemetry.addLine("B: Right of the Small Launch Area");
+        telemetry.addLine("Left Action Button: Front of the Blue Goal");
+        telemetry.addLine("Top Action Button: Front of the Red Goal");
+        telemetry.addLine("Bottom Action Button: Left of the Small Launch Area");
+        telemetry.addLine("Right Action Button: Right of the Small Launch Area");
         telemetry.addLine();
 
         // Set status message based on position selection

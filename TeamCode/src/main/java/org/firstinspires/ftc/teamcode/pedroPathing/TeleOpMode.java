@@ -96,10 +96,10 @@ public class TeleOpMode extends OpMode {
         telemetry.addLine("! To enable autopark and position tracking, you need to select a start position !");
         telemetry.addLine("! This feature is optional, however, you will not be able to use autopark or view your position/heading!");
         telemetry.addLine();
-        telemetry.addLine("X: Front of the Blue Goal");
-        telemetry.addLine("Y: Front of the Red Goal");
-        telemetry.addLine("A: Left of the Small Launch Area");
-        telemetry.addLine("B: Right of the Small Launch Area");
+        telemetry.addLine("Left Action Button: Front of the Blue Goal");
+        telemetry.addLine("Top Action Button: Front of the Red Goal");
+        telemetry.addLine("Bottom Action Button: Left of the Small Launch Area");
+        telemetry.addLine("Right Action Button: Right of the Small Launch Area");
         telemetry.addLine();
 
         // Set status message based on position selection
@@ -385,12 +385,12 @@ public class TeleOpMode extends OpMode {
         telemetry.addLine("Left Trigger (Click): Big flywheel Toggle");
         telemetry.addLine("D-Pad: Microadjustments for movement");
         telemetry.addLine("Left + Right Bumper: Microadjustments for rotation");
-        telemetry.addLine("☐: Reverse Intake Direction");
-        telemetry.addLine("〇: Toggle Intake");
+        telemetry.addLine("Left Action Button: Reverse Intake Direction");
+        telemetry.addLine("Right Action Button: Toggle Intake");
 
         if (teamSelected) {
-            telemetry.addLine("△: AutoPark");
-            telemetry.addLine("✖: AutoScore");
+            telemetry.addLine("Top Action Button: AutoPark");
+            telemetry.addLine("Bottom Action Button: AutoScore");
             Drawing.drawDebug(follower);
         }
 
