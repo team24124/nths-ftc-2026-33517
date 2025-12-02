@@ -31,7 +31,7 @@ public class TeleOpMode extends OpMode {
     double microSpeed = 0.10; // for micro adjustment speed
     double regularSpeed = 0.80; // for regular movement speed
     double turnSpeed = 0.50; // for rotation speed
-    double flywheelSpeed = 1650.0; // for flywheel speed
+    double flywheelSpeed = 1600.0; // for flywheel speed
     int rumbleTime = 250; // in milliseconds
 
     private boolean isRotatingToTarget = false;
@@ -165,8 +165,8 @@ public class TeleOpMode extends OpMode {
         // Flywheel PIDF tuning
         double p = 1.0;
         double i = 0.0;
-        double d = 0.2;
-        double f = 13.0;
+        double d = 0.3;
+        double f = 12.8;
 
         flywheel.setVelocityPIDFCoefficients(p, i, d, f);
         flywheel2.setVelocityPIDFCoefficients(p, i, d, f);
