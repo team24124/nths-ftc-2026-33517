@@ -31,7 +31,7 @@ public class TeleOpMode extends OpMode {
     double microSpeed = 0.10; // for micro adjustment speed
     double regularSpeed = 0.80; // for regular movement speed
     double turnSpeed = 0.50; // for rotation speed
-    double flywheelSpeed = 1650; // for flywheel speed
+    double flywheelSpeed = 1650.0; // for flywheel speed
     int rumbleTime = 250; // in milliseconds
 
     private boolean isRotatingToTarget = false;
@@ -155,7 +155,7 @@ public class TeleOpMode extends OpMode {
         follower.update();
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
 
-        // Initialize the flywheel, servos, and intake
+        // Initialize the motors and servos
         flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
         flywheel2 = hardwareMap.get(DcMotorEx.class, "flywheel2");
         leftServo = hardwareMap.get(CRServo.class, "leftServo");
