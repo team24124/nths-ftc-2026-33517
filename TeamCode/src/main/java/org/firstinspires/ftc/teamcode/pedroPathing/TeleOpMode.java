@@ -57,7 +57,7 @@ public class TeleOpMode extends OpMode {
     double microSpeed = 0.10; // for micro adjustment speed
     double regularSpeed = 0.80; // for regular movement speed
     double turnSpeed = 0.50; // for rotation speed
-    double flywheelSpeed = 1200; // for flywheel speed
+    double flywheelSpeed = 1650; // for flywheel speed
 
     // Quick Rotation Angle
     double quickRotationAngle = 180.0;
@@ -67,10 +67,10 @@ public class TeleOpMode extends OpMode {
         // Set positions based on selected team
        if (selectedTeam == Team.RED) {
            basePose = new Pose(38.65, 33.25, Math.toRadians(180));
-           scorePose = new Pose(84, 12, Math.toRadians(68));
+           scorePose = new Pose(72, 132, Math.toRadians(0));
        } else {
            basePose = new Pose(105, 33, Math.toRadians(0));
-           scorePose = new Pose(60, 12, Math.toRadians(112));
+           scorePose = new Pose(72, 132, Math.toRadians(180));
        }
 
         // Set starting positions
@@ -82,10 +82,10 @@ public class TeleOpMode extends OpMode {
                 startPose = new Pose(120, 125, Math.toRadians(217));
                 break;
             case 2:
-                startPose = new Pose(57, 9.5, Math.toRadians(90));
+                startPose = new Pose(56.75, 8.5, Math.toRadians(90));
                 break;
             default:
-                startPose = new Pose(86.5, 9.5, Math.toRadians(90));
+                startPose = new Pose(87.25, 8.5, Math.toRadians(90));
                 break;
         }
     }
@@ -159,17 +159,17 @@ public class TeleOpMode extends OpMode {
         intake = hardwareMap.get(DcMotorEx.class, "intake");
 
         // Flywheel PIDF tuning
-        double p = 0.0;
+        double p = 1.0;
         double i = 0.0;
-        double d = 0.0;
-        double f = 0.0;
+        double d = 0.2;
+        double f = 13.0;
 
-        //flywheel.setVelocityPIDFCoefficients(p, i, d, f);
-        //flywheel2.setVelocityPIDFCoefficients(p, i, d, f);
+        flywheel.setVelocityPIDFCoefficients(p, i, d, f);
+        flywheel2.setVelocityPIDFCoefficients(p, i, d, f);
 
         // Set zero power behaviour of the flywheel
-        flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        flywheel2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        flywheel.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+        flywheel2.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
 
         // Reverse direction
         flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -385,10 +385,12 @@ public class TeleOpMode extends OpMode {
         telemetry.addLine("Left Trigger (Click): Big flywheel Toggle");
         telemetry.addLine("D-Pad: Microadjustments for movement");
         telemetry.addLine("Left + Right Bumper: Microadjustments for rotation");
+        telemetry.addLine("☐: Reverse Intake Direction");
+        telemetry.addLine("〇: Toggle Intake");
 
         if (teamSelected) {
-            telemetry.addLine("Y: AutoPark");
-            telemetry.addLine("A: AutoScore");
+            telemetry.addLine("△: AutoPark");
+            telemetry.addLine("✖: AutoScore");
             Drawing.drawDebug(follower);
         }
 
