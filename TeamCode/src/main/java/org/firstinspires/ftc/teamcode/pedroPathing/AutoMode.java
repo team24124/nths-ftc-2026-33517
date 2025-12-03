@@ -41,7 +41,7 @@ public class AutoMode extends OpMode {
 
     private Pose startPose, middlePose, ballsPose, ballsCapture, ballsPose2, ballsCapture2, ballsPose3, ballsCapture3, lever;
 
-    private PathChain toMiddle, topBalls, middleBalls, bottomBalls, toLever;
+    private PathChain toMiddle, toTopBalls, captureTop, returnFromTop, toMiddleBalls, captureMiddle, returnFromMiddle, toBottomBalls, captureBottom, returnFromBottom, toLever;
 
     private void setPosesForTeam() {
         // Set team poses based on driver input
@@ -83,43 +83,56 @@ public class AutoMode extends OpMode {
     }
 
     public void buildPaths() {
-        // Move to middle to shoot preloaded balls
         toMiddle = follower.pathBuilder()
                 .addPath(new BezierLine(startPose, middlePose))
                 .setLinearHeadingInterpolation(startPose.getHeading(), middlePose.getHeading())
                 .build();
 
-        // Move from middle to top set of balls, intake, and return to middle
-        topBalls = follower.pathBuilder()
+        toTopBalls = follower.pathBuilder()
                 .addPath(new BezierLine(middlePose, ballsPose))
                 .setLinearHeadingInterpolation(middlePose.getHeading(), ballsPose.getHeading())
+                .build();
+
+        captureTop = follower.pathBuilder()
                 .addPath(new BezierLine(ballsPose, ballsCapture))
                 .setLinearHeadingInterpolation(ballsPose.getHeading(), ballsCapture.getHeading())
+                .build();
+
+        returnFromTop = follower.pathBuilder()
                 .addPath(new BezierLine(ballsCapture, middlePose))
                 .setLinearHeadingInterpolation(ballsCapture.getHeading(), middlePose.getHeading())
                 .build();
 
-        // Move from middle to middle set of balls, intake, and return to middle
-        middleBalls = follower.pathBuilder()
+        toMiddleBalls = follower.pathBuilder()
                 .addPath(new BezierLine(middlePose, ballsPose2))
                 .setLinearHeadingInterpolation(middlePose.getHeading(), ballsPose2.getHeading())
+                .build();
+
+        captureMiddle = follower.pathBuilder()
                 .addPath(new BezierLine(ballsPose2, ballsCapture2))
                 .setLinearHeadingInterpolation(ballsPose2.getHeading(), ballsCapture2.getHeading())
+                .build();
+
+        returnFromMiddle = follower.pathBuilder()
                 .addPath(new BezierLine(ballsCapture2, middlePose))
                 .setLinearHeadingInterpolation(ballsCapture2.getHeading(), middlePose.getHeading())
                 .build();
 
-        // Move from middle to bottom set of balls, intake, and return to middle
-        bottomBalls = follower.pathBuilder()
+        toBottomBalls = follower.pathBuilder()
                 .addPath(new BezierLine(middlePose, ballsPose3))
                 .setLinearHeadingInterpolation(middlePose.getHeading(), ballsPose3.getHeading())
+                .build();
+
+        captureBottom = follower.pathBuilder()
                 .addPath(new BezierLine(ballsPose3, ballsCapture3))
                 .setLinearHeadingInterpolation(ballsPose3.getHeading(), ballsCapture3.getHeading())
+                .build();
+
+        returnFromBottom = follower.pathBuilder()
                 .addPath(new BezierLine(ballsCapture3, middlePose))
                 .setLinearHeadingInterpolation(ballsCapture3.getHeading(), middlePose.getHeading())
                 .build();
 
-        // Move to base
         toLever = follower.pathBuilder()
                 .addPath(new BezierLine(middlePose, lever))
                 .setLinearHeadingInterpolation(middlePose.getHeading(), lever.getHeading())
@@ -145,7 +158,7 @@ public class AutoMode extends OpMode {
         double p = 1.0;
         double i = 0.0;
         double d = 0.0;
-        double f = 12.3;
+        double f = 12.5;
 
         flywheel.setVelocityPIDFCoefficients(p, i, d, f);
         flywheel2.setVelocityPIDFCoefficients(p, i, d, f);
@@ -233,8 +246,6 @@ public class AutoMode extends OpMode {
 
         opmodeTimer.resetTimer();
         setPathState(0);
-
-        intake.setPower(1.0);
     }
 
     @Override
@@ -249,6 +260,8 @@ public class AutoMode extends OpMode {
         telemetry.addData("X", follower.getPose().getX());
         telemetry.addData("Y", follower.getPose().getY());
         telemetry.addData("Heading", follower.getPose().getHeading());
+        telemetry.addData("Flywheel Targeted Velocity", flywheelSpeed);
+        telemetry.addData("Flywheel Real-Time Velocity", flywheel.getVelocity());
         telemetry.update();
 
         Drawing.drawDebug(follower);
@@ -265,58 +278,102 @@ public class AutoMode extends OpMode {
                 checkIfBusy(2, 0);
                 break;
             case 2:
-                // Shoot balls
                 if (shootBalls()) {
                     setPathState(3);
                 }
                 break;
             case 3:
-                follower.followPath(topBalls, true);
+                follower.followPath(toTopBalls, true);
+                intake.setPower(1.0);
                 setPathState(4);
                 break;
             case 4:
                 checkIfBusy(5, 0);
                 break;
             case 5:
-                // Shoot balls
-                if (shootBalls()) {
-                    setPathState(6);
-                }
+                follower.followPath(captureTop, true);
+                setPathState(6);
                 break;
             case 6:
-                follower.followPath(middleBalls, true);
-                setPathState(7);
+                checkIfBusy(7, 0);
                 break;
             case 7:
-                checkIfBusy(8, 0);
+                intake.setPower(0.0);
+                follower.followPath(returnFromTop, true);
+                setPathState(8);
                 break;
             case 8:
-                // Shoot balls
-                if (shootBalls()) {
-                    setPathState(9);
-                }
+                checkIfBusy(9, 0);
                 break;
             case 9:
-                follower.followPath(bottomBalls, true);
-                setPathState(10);
-                break;
-            case 10:
-                checkIfBusy(11, 0);
-                break;
-            case 11:
-                // Shoot balls
                 if (shootBalls()) {
-                    setPathState(12);
+                    setPathState(10);
                 }
                 break;
+            case 10:
+                follower.followPath(toMiddleBalls, true);
+                intake.setPower(1.0);
+                setPathState(11);
+                break;
+            case 11:
+                checkIfBusy(12, 0);
+                break;
             case 12:
-                follower.followPath(toLever, true);
+                follower.followPath(captureMiddle, true);
                 setPathState(13);
                 break;
             case 13:
                 checkIfBusy(14, 0);
                 break;
             case 14:
+                intake.setPower(0.0);
+                follower.followPath(returnFromMiddle, true);
+                setPathState(15);
+                break;
+            case 15:
+                checkIfBusy(16, 0);
+                break;
+            case 16:
+                if (shootBalls()) {
+                    setPathState(17);
+                }
+                break;
+            case 17:
+                follower.followPath(toBottomBalls, true);
+                intake.setPower(1.0);
+                setPathState(18);
+                break;
+            case 18:
+                checkIfBusy(19, 0);
+                break;
+            case 19:
+                follower.followPath(captureBottom, true);
+                setPathState(20);
+                break;
+            case 20:
+                checkIfBusy(21, 0);
+                break;
+            case 21:
+                intake.setPower(0.0);
+                follower.followPath(returnFromBottom, true);
+                setPathState(22);
+                break;
+            case 22:
+                checkIfBusy(23, 0);
+                break;
+            case 23:
+                if (shootBalls()) {
+                    setPathState(24);
+                }
+                break;
+            case 24:
+                follower.followPath(toLever, true);
+                setPathState(25);
+                break;
+            case 25:
+                checkIfBusy(26, 0);
+                break;
+            case 26:
                 telemetry.addData("Status", "Auto Complete");
                 break;
         }
