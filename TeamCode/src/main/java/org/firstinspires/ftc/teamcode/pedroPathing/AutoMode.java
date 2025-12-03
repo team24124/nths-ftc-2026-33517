@@ -48,17 +48,17 @@ public class AutoMode extends OpMode {
         if (selectedTeam == Team.RED) { // Poses for Red team
             middlePose = new Pose(84, 84, Math.toRadians(42));
             ballsPose = new Pose(96, 84, Math.toRadians(0));
-            ballsCapture = new Pose(120, 84, Math.toRadians(0));
-            ballsPose2 = new Pose (96, 60, Math.toRadians(0));
-            ballsCapture2 = new Pose(120, 60, Math.toRadians(0));
-            ballsPose3 = new Pose(96, 36, Math.toRadians(0));
-            ballsCapture3 = new Pose(120, 36, Math.toRadians(0));
+            ballsCapture = new Pose(121, 84, Math.toRadians(0));
+            ballsPose2 = new Pose(96, 59, Math.toRadians(0));
+            ballsCapture2 = new Pose(126, 59, Math.toRadians(0));
+            ballsPose3 = new Pose(96, 38, Math.toRadians(0));
+            ballsCapture3 = new Pose(127, 38, Math.toRadians(0));
             lever = new Pose(120, 72, Math.toRadians(0));
         } else { // Poses for Blue team
             middlePose = new Pose(60, 84, Math.toRadians(138));
             ballsPose = new Pose(48, 84, Math.toRadians(180));
-            ballsCapture = new Pose(22, 84, Math.toRadians(180));
-            ballsPose2 = new Pose (48, 59, Math.toRadians(180));
+            ballsCapture = new Pose(23, 84, Math.toRadians(180));
+            ballsPose2 = new Pose(48, 59, Math.toRadians(180));
             ballsCapture2 = new Pose(18, 59, Math.toRadians(180));
             ballsPose3 = new Pose(48, 38, Math.toRadians(180));
             ballsCapture3 = new Pose(17, 38, Math.toRadians(180));
@@ -268,6 +268,7 @@ public class AutoMode extends OpMode {
     }
 
     // Check for a new autonomous path
+    // TODO: Stop intake after grabbing balls in path
     public void autonomousPathUpdate() {
         switch (pathState) {
             case 0:
@@ -393,8 +394,8 @@ public class AutoMode extends OpMode {
             case 1:
                 // Wait for flywheel to reach speed
                 if (flywheel.getVelocity() >= flywheelSpeed) {
-                    leftServo.setPower(1.0);
-                    rightServo.setPower(1.0);
+                    intake.setPower(1.0);
+                    rotateServos(1.0);
                     shootingSubState = 2;
                     pathTimer.resetTimer();
                 }
@@ -402,8 +403,7 @@ public class AutoMode extends OpMode {
             case 2:
                 // Wait for shooting to complete
                 if (pathTimer.getElapsedTimeSeconds() > shootingTime) {
-                    leftServo.setPower(0.0);
-                    rightServo.setPower(0.0);
+                    rotateServos(0.0);
                     rotateFlywheel(0);
                     shootingSubState = 0;
                     return true;
