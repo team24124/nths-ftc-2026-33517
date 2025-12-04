@@ -30,9 +30,13 @@ public class TeleOpMode extends OpMode {
     /** Constants **/
     double microSpeed = 0.10; // for micro adjustment speed
     double regularSpeed = 0.80; // for regular movement speed
+    double flywheelSpeed = 1625.0;
     double turnSpeed = 0.50; // for rotation speed
-    double flywheelSpeed = 1625.0; // for flywheel speed
     int rumbleTime = 250; // in milliseconds
+
+    // Add these new fields for voltage compensation
+    private double voltageMultiplier = 1.0;
+    private static final double NOMINAL_VOLTAGE = 13.0; // Reference voltage
 
     private boolean isRotatingToTarget = false;
     private double targetHeading = 0;
@@ -163,10 +167,10 @@ public class TeleOpMode extends OpMode {
         intake = hardwareMap.get(DcMotorEx.class, "intake");
 
         // Flywheel PIDF tuning
-        double p = 1.0;
-        double i = 0.0;
+        double p = 7.0;
+        double i = 0.12;
         double d = 0.0;
-        double f = 12.5;
+        double f = 12.1;
 
         flywheel.setVelocityPIDFCoefficients(p, i, d, f);
         flywheel2.setVelocityPIDFCoefficients(p, i, d, f);
@@ -265,7 +269,7 @@ public class TeleOpMode extends OpMode {
         if (flywheel.getVelocity() >= flywheelSpeed && !reachedVelocity) {
             gamepad1.rumble(rumbleTime); // Let driver know flywheel is up to speed
             reachedVelocity = true;
-        } else if (flywheel.getVelocity() < flywheelSpeed && reachedVelocity) {
+        } else if (flywheel.getVelocity() < flywheelSpeed - 25 && reachedVelocity) {
             reachedVelocity = false;
         }
 

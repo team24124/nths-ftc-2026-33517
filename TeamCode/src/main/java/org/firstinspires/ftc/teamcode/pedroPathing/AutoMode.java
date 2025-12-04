@@ -155,10 +155,10 @@ public class AutoMode extends OpMode {
         intake = hardwareMap.get(DcMotorEx.class, "intake");
 
         // Flywheel PIDF tuning
-        double p = 1.0;
-        double i = 0.0;
+        double p = 7.0;
+        double i = 0.12;
         double d = 0.0;
-        double f = 12.5;
+        double f = 12.1;
 
         flywheel.setVelocityPIDFCoefficients(p, i, d, f);
         flywheel2.setVelocityPIDFCoefficients(p, i, d, f);
