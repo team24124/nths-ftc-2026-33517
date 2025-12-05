@@ -30,13 +30,13 @@ public class TeleOpMode extends OpMode {
     /** Constants **/
     double microSpeed = 0.10; // for micro adjustment speed
     double regularSpeed = 0.80; // for regular movement speed
-    double flywheelSpeed = 1625.0;
+    double flywheelSpeed = 1625.0; // flywheel speed
     double turnSpeed = 0.50; // for rotation speed
+    double slowParkPower = 0.2; // for parking correction speed
     int rumbleTime = 250; // in milliseconds
 
     // Add these new fields for voltage compensation
     private double voltageMultiplier = 1.0;
-    private static final double NOMINAL_VOLTAGE = 13.0; // Reference voltage
 
     private boolean isRotatingToTarget = false;
     private double targetHeading = 0;
@@ -44,6 +44,7 @@ public class TeleOpMode extends OpMode {
     private boolean leftStickPressed = false;
     private boolean debounce = false;
     private boolean reachedVelocity = false;
+    private boolean autoParkFirstRun = false;
 
     // Intake control
     private boolean intakeToggle = false;
@@ -75,10 +76,10 @@ public class TeleOpMode extends OpMode {
         // Set positions based on selected team
        if (selectedTeam == Team.RED) {
            basePose = new Pose(38.65, 33.25, Math.toRadians(180));
-           scorePose = new Pose(71, 132, Math.toRadians(0));
+           scorePose = new Pose(68, 132, Math.toRadians(0));
        } else {
            basePose = new Pose(105, 33, Math.toRadians(0));
-           scorePose = new Pose(71, 132, Math.toRadians(180));
+           scorePose = new Pose(74, 132, Math.toRadians(180));
        }
 
         // Set starting positions
@@ -167,10 +168,10 @@ public class TeleOpMode extends OpMode {
         intake = hardwareMap.get(DcMotorEx.class, "intake");
 
         // Flywheel PIDF tuning
-        double p = 7.0;
-        double i = 0.12;
-        double d = 0.0;
-        double f = 12.1;
+        double p = 9.0;
+        double i = 0.15;
+        double d = 0.4;
+        double f = 12.25;
 
         flywheel.setVelocityPIDFCoefficients(p, i, d, f);
         flywheel2.setVelocityPIDFCoefficients(p, i, d, f);
@@ -183,6 +184,7 @@ public class TeleOpMode extends OpMode {
         flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
         leftServo.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightServo.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Initialize the visualizer in panels
         Drawing.init();
@@ -314,6 +316,7 @@ public class TeleOpMode extends OpMode {
                         .build();
                 follower.followPath(toBase, true);
                 autoParking = true;
+                autoParkFirstRun = true;
                 gamepad1.rumble(rumbleTime);
             } else { // Stop AutoPark if driver hits Y while an AutoPark is happening
                 resetStates();
@@ -328,8 +331,20 @@ public class TeleOpMode extends OpMode {
 
             // Check if auto pathing has finished
             if (!follower.isBusy()) {
-                gamepad1.rumble(rumbleTime);
-                resetStates();
+                if (autoParking && autoParkFirstRun) {
+                    // First run completed, now do it again slowly
+                    PathChain toBase = follower.pathBuilder()
+                            .addPath(new BezierLine(follower.getPose(), basePose))
+                            .setLinearHeadingInterpolation(follower.getPose().getHeading(), basePose.getHeading())
+                            .build();
+                    follower.setMaxPower(slowParkPower);
+                    follower.followPath(toBase, true);
+                    autoParkFirstRun = false;
+                } else {
+                    // Second run completed (or auto score finished)
+                    gamepad1.rumble(rumbleTime);
+                    resetStates();
+                }
             }
         }
 
@@ -367,6 +382,7 @@ public class TeleOpMode extends OpMode {
 
     /** This method resets the state of any autonomous teleop features **/
     private void resetStates() {
+        follower.setMaxPower(1.0);
         follower.breakFollowing();
         autoParking = false;
         autoScoring = false;

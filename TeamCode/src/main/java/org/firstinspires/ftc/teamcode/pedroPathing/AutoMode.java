@@ -22,7 +22,8 @@ public class AutoMode extends OpMode {
 
     // Constants
     private double flywheelSpeed = 1600.0; // Default flywheel speed
-    private double shootingTime = 6.0; // Time to shoot all 3 balls (s)
+    private double shootingTime = 8.0; // Time to shoot all 3 balls (s)
+    private double intakeBotSpeed = 0.3; // 0.0-1.0 Determines speed of the BOT while collecting balls
 
     private DcMotorEx flywheel, flywheel2, intake;
     private CRServo leftServo, rightServo;
@@ -48,20 +49,20 @@ public class AutoMode extends OpMode {
         if (selectedTeam == Team.RED) { // Poses for Red team
             middlePose = new Pose(84, 84, Math.toRadians(42));
             ballsPose = new Pose(96, 84, Math.toRadians(0));
-            ballsCapture = new Pose(121, 84, Math.toRadians(0));
+            ballsCapture = new Pose(123, 84, Math.toRadians(0));
             ballsPose2 = new Pose(96, 59, Math.toRadians(0));
             ballsCapture2 = new Pose(126, 59, Math.toRadians(0));
             ballsPose3 = new Pose(96, 38, Math.toRadians(0));
             ballsCapture3 = new Pose(127, 38, Math.toRadians(0));
             lever = new Pose(120, 72, Math.toRadians(0));
         } else { // Poses for Blue team
-            middlePose = new Pose(60, 84, Math.toRadians(138));
+            middlePose = new Pose(60, 84, Math.toRadians(135));
             ballsPose = new Pose(48, 84, Math.toRadians(180));
-            ballsCapture = new Pose(23, 84, Math.toRadians(180));
-            ballsPose2 = new Pose(48, 59, Math.toRadians(180));
-            ballsCapture2 = new Pose(18, 59, Math.toRadians(180));
-            ballsPose3 = new Pose(48, 38, Math.toRadians(180));
-            ballsCapture3 = new Pose(17, 38, Math.toRadians(180));
+            ballsCapture = new Pose(19, 84, Math.toRadians(180));
+            ballsPose2 = new Pose(46, 59, Math.toRadians(180));
+            ballsCapture2 = new Pose(16, 59, Math.toRadians(180));
+            ballsPose3 = new Pose(48, 36, Math.toRadians(180));
+            ballsCapture3 = new Pose(12, 36, Math.toRadians(180));
             lever = new Pose(24, 72, Math.toRadians(180));
         }
 
@@ -155,10 +156,10 @@ public class AutoMode extends OpMode {
         intake = hardwareMap.get(DcMotorEx.class, "intake");
 
         // Flywheel PIDF tuning
-        double p = 7.0;
-        double i = 0.12;
-        double d = 0.0;
-        double f = 12.1;
+        double p = 9.0;
+        double i = 0.15;
+        double d = 0.4;
+        double f = 12.25;
 
         flywheel.setVelocityPIDFCoefficients(p, i, d, f);
         flywheel2.setVelocityPIDFCoefficients(p, i, d, f);
@@ -171,6 +172,7 @@ public class AutoMode extends OpMode {
         flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
         leftServo.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightServo.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Initialize the panels visualizer
         Drawing.init();
@@ -292,6 +294,7 @@ public class AutoMode extends OpMode {
                 checkIfBusy(5, 0);
                 break;
             case 5:
+                follower.setMaxPower(intakeBotSpeed);
                 follower.followPath(captureTop, true);
                 setPathState(6);
                 break;
@@ -300,6 +303,7 @@ public class AutoMode extends OpMode {
                 break;
             case 7:
                 intake.setPower(0.0);
+                follower.setMaxPower(1.0);
                 follower.followPath(returnFromTop, true);
                 setPathState(8);
                 break;
@@ -320,6 +324,7 @@ public class AutoMode extends OpMode {
                 checkIfBusy(12, 0);
                 break;
             case 12:
+                follower.setMaxPower(intakeBotSpeed);
                 follower.followPath(captureMiddle, true);
                 setPathState(13);
                 break;
@@ -328,6 +333,7 @@ public class AutoMode extends OpMode {
                 break;
             case 14:
                 intake.setPower(0.0);
+                follower.setMaxPower(1.0);
                 follower.followPath(returnFromMiddle, true);
                 setPathState(15);
                 break;
@@ -348,6 +354,7 @@ public class AutoMode extends OpMode {
                 checkIfBusy(19, 0);
                 break;
             case 19:
+                follower.setMaxPower(intakeBotSpeed);
                 follower.followPath(captureBottom, true);
                 setPathState(20);
                 break;
@@ -356,6 +363,7 @@ public class AutoMode extends OpMode {
                 break;
             case 21:
                 intake.setPower(0.0);
+                follower.setMaxPower(1.0);
                 follower.followPath(returnFromBottom, true);
                 setPathState(22);
                 break;
@@ -375,6 +383,7 @@ public class AutoMode extends OpMode {
                 checkIfBusy(26, 0);
                 break;
             case 26:
+                intake.setPower(0.0);
                 telemetry.addData("Status", "Auto Complete");
                 break;
         }
@@ -393,7 +402,7 @@ public class AutoMode extends OpMode {
                 return false;
             case 1:
                 // Wait for flywheel to reach speed
-                if (flywheel.getVelocity() >= flywheelSpeed) {
+                if (flywheel.getVelocity() >= flywheelSpeed - 15) {
                     intake.setPower(1.0);
                     rotateServos(1.0);
                     shootingSubState = 2;
