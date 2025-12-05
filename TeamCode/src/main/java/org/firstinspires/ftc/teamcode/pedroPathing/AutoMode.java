@@ -22,8 +22,8 @@ public class AutoMode extends OpMode {
 
     // Constants
     private double flywheelSpeed = 1600.0; // Default flywheel speed
-    private double shootingTime = 8.0; // Time to shoot all 3 balls (s)
-    private double intakeBotSpeed = 0.3; // 0.0-1.0 Determines speed of the BOT while collecting balls
+    private double shootingTime = 6.0; // Time to shoot all 3 balls (s)
+    private double intakeBotSpeed = 0.45; // 0.0-1.0 Determines speed of the BOT while collecting balls
 
     private DcMotorEx flywheel, flywheel2, intake;
     private CRServo leftServo, rightServo;
@@ -47,22 +47,22 @@ public class AutoMode extends OpMode {
     private void setPosesForTeam() {
         // Set team poses based on driver input
         if (selectedTeam == Team.RED) { // Poses for Red team
-            middlePose = new Pose(84, 84, Math.toRadians(42));
+            middlePose = new Pose(84, 84, Math.toRadians(40));
             ballsPose = new Pose(96, 84, Math.toRadians(0));
-            ballsCapture = new Pose(123, 84, Math.toRadians(0));
+            ballsCapture = new Pose(125, 84, Math.toRadians(0));
             ballsPose2 = new Pose(96, 59, Math.toRadians(0));
-            ballsCapture2 = new Pose(126, 59, Math.toRadians(0));
+            ballsCapture2 = new Pose(134, 59, Math.toRadians(0));
             ballsPose3 = new Pose(96, 38, Math.toRadians(0));
-            ballsCapture3 = new Pose(127, 38, Math.toRadians(0));
+            ballsCapture3 = new Pose(129, 38, Math.toRadians(0));
             lever = new Pose(120, 72, Math.toRadians(0));
         } else { // Poses for Blue team
-            middlePose = new Pose(60, 84, Math.toRadians(135));
+            middlePose = new Pose(60, 84, Math.toRadians(137));
             ballsPose = new Pose(48, 84, Math.toRadians(180));
-            ballsCapture = new Pose(19, 84, Math.toRadians(180));
-            ballsPose2 = new Pose(46, 59, Math.toRadians(180));
-            ballsCapture2 = new Pose(16, 59, Math.toRadians(180));
-            ballsPose3 = new Pose(48, 36, Math.toRadians(180));
-            ballsCapture3 = new Pose(12, 36, Math.toRadians(180));
+            ballsCapture = new Pose(17, 84, Math.toRadians(180));
+            ballsPose2 = new Pose(46, 56, Math.toRadians(180));
+            ballsCapture2 = new Pose(10, 56, Math.toRadians(180));
+            ballsPose3 = new Pose(48, 35, Math.toRadians(180));
+            ballsCapture3 = new Pose(10, 35, Math.toRadians(180));
             lever = new Pose(24, 72, Math.toRadians(180));
         }
 
@@ -274,6 +274,8 @@ public class AutoMode extends OpMode {
     public void autonomousPathUpdate() {
         switch (pathState) {
             case 0:
+                rotateFlywheel(flywheelSpeed);
+                rotateServos(1.0);
                 follower.followPath(toMiddle, true);
                 setPathState(1);
                 break;
@@ -302,6 +304,8 @@ public class AutoMode extends OpMode {
                 checkIfBusy(7, 0);
                 break;
             case 7:
+                rotateFlywheel(flywheelSpeed);
+                rotateServos(1.0);
                 intake.setPower(0.0);
                 follower.setMaxPower(1.0);
                 follower.followPath(returnFromTop, true);
@@ -332,6 +336,8 @@ public class AutoMode extends OpMode {
                 checkIfBusy(14, 0);
                 break;
             case 14:
+                rotateFlywheel(flywheelSpeed);
+                rotateServos(0.8);
                 intake.setPower(0.0);
                 follower.setMaxPower(1.0);
                 follower.followPath(returnFromMiddle, true);
@@ -362,6 +368,8 @@ public class AutoMode extends OpMode {
                 checkIfBusy(21, 0);
                 break;
             case 21:
+                rotateFlywheel(flywheelSpeed);
+                rotateServos(0.7);
                 intake.setPower(0.0);
                 follower.setMaxPower(1.0);
                 follower.followPath(returnFromBottom, true);
@@ -395,8 +403,6 @@ public class AutoMode extends OpMode {
     public boolean shootBalls() {
         switch (shootingSubState) {
             case 0:
-                // Charge up the flywheel
-                rotateFlywheel(flywheelSpeed);
                 shootingSubState = 1;
                 pathTimer.resetTimer();
                 return false;
