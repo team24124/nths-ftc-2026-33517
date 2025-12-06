@@ -22,15 +22,15 @@ public class AutoMode extends OpMode {
 
     // Constants
     private double flywheelSpeed = 1600.0; // Default flywheel speed
-    private double shootingTime = 6.0; // Time to shoot all 3 balls (s)
-    private double intakeBotSpeed = 0.45; // 0.0-1.0 Determines speed of the BOT while collecting balls
+    private double shootingTime = 5.5; // Time to shoot all 3 balls (s)
+    private double intakeBotSpeed = 0.55; // 0.0-1.0 Determines speed of the BOT while collecting balls
 
     private DcMotorEx flywheel, flywheel2, intake;
     private CRServo leftServo, rightServo;
 
-    private enum Team {RED, BLUE};
+    private SharedPoseStorage.Team selectedTeam = SharedPoseStorage.Team.RED;
     private boolean teamSelected = false;
-    private Team selectedTeam = Team.RED;
+    private int mode = 1; // 0 = Idle | 1 = Active
 
     /*
     * 0: Front of blue goal
@@ -40,30 +40,30 @@ public class AutoMode extends OpMode {
      */
     private int startPosition = 0;
 
-    private Pose startPose, middlePose, ballsPose, ballsCapture, ballsPose2, ballsCapture2, ballsPose3, ballsCapture3, lever;
+    private Pose startPose, middlePose, ballsPose, ballsCapture, ballsPose2, ballsCapture2, ballsPose3, ballsCapture3, lever, passivePose;
 
-    private PathChain toMiddle, toTopBalls, captureTop, returnFromTop, toMiddleBalls, captureMiddle, returnFromMiddle, toBottomBalls, captureBottom, returnFromBottom, toLever;
+    private PathChain toMiddle, toTopBalls, captureTop, returnFromTop, toMiddleBalls, captureMiddle, returnFromMiddle, toBottomBalls, captureBottom, returnFromBottom, toLever, toPassive;
 
     private void setPosesForTeam() {
         // Set team poses based on driver input
-        if (selectedTeam == Team.RED) { // Poses for Red team
-            middlePose = new Pose(84, 84, Math.toRadians(40));
+        if (selectedTeam == SharedPoseStorage.Team.RED) { // Poses for Red team
+            middlePose = new Pose(84, 84, Math.toRadians(43));
             ballsPose = new Pose(96, 84, Math.toRadians(0));
-            ballsCapture = new Pose(125, 84, Math.toRadians(0));
-            ballsPose2 = new Pose(96, 59, Math.toRadians(0));
-            ballsCapture2 = new Pose(134, 59, Math.toRadians(0));
-            ballsPose3 = new Pose(96, 38, Math.toRadians(0));
-            ballsCapture3 = new Pose(129, 38, Math.toRadians(0));
-            lever = new Pose(120, 72, Math.toRadians(0));
+            ballsCapture = new Pose(127, 84, Math.toRadians(0));
+            ballsPose2 = new Pose(98, 56, Math.toRadians(0));
+            ballsCapture2 = new Pose(132, 56, Math.toRadians(0));
+            ballsPose3 = new Pose(96, 35, Math.toRadians(0));
+            ballsCapture3 = new Pose(132, 35, Math.toRadians(0));
+            lever = new Pose(114, 72, Math.toRadians(0));
         } else { // Poses for Blue team
             middlePose = new Pose(60, 84, Math.toRadians(137));
             ballsPose = new Pose(48, 84, Math.toRadians(180));
-            ballsCapture = new Pose(17, 84, Math.toRadians(180));
+            ballsCapture = new Pose(15, 84, Math.toRadians(180));
             ballsPose2 = new Pose(46, 56, Math.toRadians(180));
-            ballsCapture2 = new Pose(10, 56, Math.toRadians(180));
+            ballsCapture2 = new Pose(8, 56, Math.toRadians(180));
             ballsPose3 = new Pose(48, 35, Math.toRadians(180));
-            ballsCapture3 = new Pose(10, 35, Math.toRadians(180));
-            lever = new Pose(24, 72, Math.toRadians(180));
+            ballsCapture3 = new Pose(8, 35, Math.toRadians(180));
+            lever = new Pose(30, 72, Math.toRadians(180));
         }
 
         // Set starting positions
@@ -72,7 +72,7 @@ public class AutoMode extends OpMode {
                 startPose = new Pose(22.25, 125, Math.toRadians(324));
                 break;
             case 1:
-                startPose = new Pose(5, 125, Math.toRadians(217));
+                startPose = new Pose(121.75, 125, Math.toRadians(217));
                 break;
             case 2:
                 startPose = new Pose(56.75, 8.5, Math.toRadians(90));
@@ -80,6 +80,23 @@ public class AutoMode extends OpMode {
             default:
                 startPose = new Pose(87.25, 8.5, Math.toRadians(90));
                 break;
+        }
+
+        // Set passive pose
+        if (mode == 0) {
+            if (startPosition == 0 || startPosition == 1) {
+                if (selectedTeam == SharedPoseStorage.Team.BLUE) {
+                    passivePose = new Pose(60, 132, Math.toRadians(0));
+                } else {
+                    passivePose = new Pose(84, 132, Math.toRadians(180));
+                }
+            } else {
+                if (selectedTeam == SharedPoseStorage.Team.BLUE) {
+                    passivePose = new Pose(36, 12, Math.toRadians(90));
+                } else {
+                    passivePose = new Pose(108, 12, Math.toRadians(90));
+                }
+            }
         }
     }
 
@@ -138,6 +155,13 @@ public class AutoMode extends OpMode {
                 .addPath(new BezierLine(middlePose, lever))
                 .setLinearHeadingInterpolation(middlePose.getHeading(), lever.getHeading())
                 .build();
+
+        if (mode == 0) {
+            toPassive = follower.pathBuilder()
+                    .addPath(new BezierLine(startPose, passivePose))
+                    .setLinearHeadingInterpolation(startPose.getHeading(), passivePose.getHeading())
+                    .build();
+        }
     }
 
     @Override
@@ -182,12 +206,17 @@ public class AutoMode extends OpMode {
     public void init_loop() {
         telemetry.addLine("====STARTING POSITION SETTINGS====");
         telemetry.addLine("! Selecting where the robot starts on the field determines its autonomous path !");
-        telemetry.addLine("! Connect your controller to select a position !");
         telemetry.addLine();
         telemetry.addLine("Left Action Button: Front of the Blue Goal");
         telemetry.addLine("Top Action Button: Front of the Red Goal");
         telemetry.addLine("Bottom Action Button: Left of the Small Launch Area");
         telemetry.addLine("Right Action Button: Right of the Small Launch Area");
+        telemetry.addLine();
+        telemetry.addLine("====MODE SETTINGS====");
+        telemetry.addLine("! IDLE mode moves the bot to a passive position that does not interfere with other autos !");
+        telemetry.addLine("! ACTIVE mode runs the autonomous routine !");
+        telemetry.addLine();
+        telemetry.addLine("Up D-Pad: Switch Modes");
         telemetry.addLine();
 
         // Set status message based on position selection
@@ -210,24 +239,33 @@ public class AutoMode extends OpMode {
             telemetry.addLine("STATUS: Waiting..");
         }
 
+        telemetry.addLine("MODE: " + (mode == 0 ? "Idle" : "Active"));
+
         // Controls to select team
-        if (!teamSelected) {
-            if (gamepad1.x) {
-                selectedTeam = Team.BLUE;
-                startPosition = 0;
-                teamSelected = true;
-            } else if (gamepad1.y) {
-                selectedTeam = Team.RED;
-                startPosition = 1;
-                teamSelected = true;
-            }  else if (gamepad1.a) {
-                selectedTeam = Team.BLUE;
-                startPosition = 2;
-                teamSelected = true;
-            } else if (gamepad1.b) {
-                selectedTeam = Team.RED;
-                startPosition = 3;
-                teamSelected = true;
+        if (gamepad1.x) {
+            selectedTeam = SharedPoseStorage.Team.BLUE;
+            startPosition = 0;
+            teamSelected = true;
+        } else if (gamepad1.y) {
+            selectedTeam = SharedPoseStorage.Team.RED;
+            startPosition = 1;
+            teamSelected = true;
+        }  else if (gamepad1.a) {
+            selectedTeam = SharedPoseStorage.Team.BLUE;
+            startPosition = 2;
+            teamSelected = true;
+        } else if (gamepad1.b) {
+            selectedTeam = SharedPoseStorage.Team.RED;
+            startPosition = 3;
+            teamSelected = true;
+        }
+
+        // Switch mode
+        if (gamepad1.dpadUpWasPressed()) {
+            if (mode == 1) { // Switch to idle
+                mode = 0;
+            } else {
+                mode = 1; // Switch to active
             }
         }
 
@@ -246,6 +284,10 @@ public class AutoMode extends OpMode {
         follower.setStartingPose(startPose);
         buildPaths();
 
+        // Save team for TeleOp
+        SharedPoseStorage.currentTeam = selectedTeam;
+        SharedPoseStorage.teamAvailable = true;
+
         opmodeTimer.resetTimer();
         setPathState(0);
     }
@@ -255,6 +297,10 @@ public class AutoMode extends OpMode {
         // These loop the movements of the robot, these must be called continuously in order to work
         follower.update();
         autonomousPathUpdate();
+
+        // Save the current pose for TeleOp
+        SharedPoseStorage.currentPose = follower.getPose();
+        SharedPoseStorage.poseAvailable = true;
 
         // Feedback to Driver Hub for debugging
         telemetry.addData("Status", "Auto in progress..");
@@ -274,10 +320,14 @@ public class AutoMode extends OpMode {
     public void autonomousPathUpdate() {
         switch (pathState) {
             case 0:
-                rotateFlywheel(flywheelSpeed);
-                rotateServos(1.0);
-                follower.followPath(toMiddle, true);
-                setPathState(1);
+                if (mode == 1) {
+                    rotateFlywheel(flywheelSpeed);
+                    rotateServos(0.7);
+                    follower.followPath(toMiddle, true);
+                    setPathState(1);
+                } else {
+                    setPathState(27);
+                }
                 break;
             case 1:
                 checkIfBusy(2, 0);
@@ -297,7 +347,7 @@ public class AutoMode extends OpMode {
                 break;
             case 5:
                 follower.setMaxPower(intakeBotSpeed);
-                follower.followPath(captureTop, true);
+                follower.followPath(captureTop, false);
                 setPathState(6);
                 break;
             case 6:
@@ -330,7 +380,7 @@ public class AutoMode extends OpMode {
             case 12:
                 follower.setMaxPower(intakeBotSpeed);
                 follower.followPath(captureMiddle, true);
-                setPathState(13);
+                setPathState(25);
                 break;
             case 13:
                 checkIfBusy(14, 0);
@@ -369,7 +419,7 @@ public class AutoMode extends OpMode {
                 break;
             case 21:
                 rotateFlywheel(flywheelSpeed);
-                rotateServos(0.7);
+                rotateServos(0.65);
                 intake.setPower(0.0);
                 follower.setMaxPower(1.0);
                 follower.followPath(returnFromBottom, true);
@@ -392,7 +442,16 @@ public class AutoMode extends OpMode {
                 break;
             case 26:
                 intake.setPower(0.0);
-                telemetry.addData("Status", "Auto Complete");
+                rotateServos(0.0);
+                flywheel.setPower(0.0);
+                break;
+            // CASES AFTER THIS IS FOR IDLE PATHING
+            case 27:
+                follower.followPath(toPassive, true);
+                setPathState(28);
+                break;
+            case 28:
+                checkIfBusy(26, 0);
                 break;
         }
     }

@@ -1,4 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
+import static org.firstinspires.ftc.teamcode.pedroPathing.SharedPoseStorage.Team.RED;
+
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
@@ -51,18 +53,9 @@ public class TeleOpMode extends OpMode {
     private double intakePower = 1.0; // 1.0 = forward & -1.0 = reverse
 
     // Positioning info
-    private enum Team {RED, BLUE};
-    private Team selectedTeam = Team.RED;
+    private SharedPoseStorage.Team selectedTeam = SharedPoseStorage.Team.RED;
     private boolean teamSelected = false;
     private Pose startPose, basePose, scorePose;
-
-    /*
-     * 0: Front of blue goal
-     * 1: Front of red goal
-     * 2: Left of small launch area
-     * 3: Right of small launch area
-     */
-    private int startPosition = 0;
 
     // Driver Assist Toggles
     private boolean autoParking = false;
@@ -74,83 +67,18 @@ public class TeleOpMode extends OpMode {
     /** This method configures the starting positions and positioning system **/
     public void setupPosesForTeam() {
         // Set positions based on selected team
-       if (selectedTeam == Team.RED) {
+       if (selectedTeam == SharedPoseStorage.Team.RED) {
            basePose = new Pose(38.65, 33.25, Math.toRadians(180));
-           scorePose = new Pose(68, 132, Math.toRadians(0));
+           scorePose = new Pose(66, 132, Math.toRadians(0));
        } else {
            basePose = new Pose(105, 33, Math.toRadians(0));
-           scorePose = new Pose(74, 132, Math.toRadians(180));
+           scorePose = new Pose(76, 132, Math.toRadians(180));
        }
-
-        // Set starting positions
-        switch (startPosition) {
-            case 0:
-                startPose = new Pose(22.25, 125, Math.toRadians(324));
-                break;
-            case 1:
-                startPose = new Pose(5, 125, Math.toRadians(217));
-                break;
-            case 2:
-                startPose = new Pose(56.75, 8.5, Math.toRadians(90));
-                break;
-            default:
-                startPose = new Pose(87.25, 8.5, Math.toRadians(90));
-                break;
-        }
     }
 
     @Override
     public void init_loop() {
-        telemetry.addLine("====DRIVER ASSIST & POSITIONING CONFIGURATION====");
-        telemetry.addLine("! To enable driver assist and positioning tracking, you need to select a start position !");
-        telemetry.addLine("! This configuration is optional, however, you will not be able to use these features !");
-        telemetry.addLine();
-        telemetry.addLine("Left Action Button: Front of the Blue Goal");
-        telemetry.addLine("Top Action Button: Front of the Red Goal");
-        telemetry.addLine("Bottom Action Button: Left of the Small Launch Area");
-        telemetry.addLine("Right Action Button: Right of the Small Launch Area");
-        telemetry.addLine();
 
-        // Set status message based on position selection
-        if (teamSelected) { // Team and starting position was selected
-            switch (startPosition) {
-                case 0:
-                    telemetry.addLine("STATUS: Starting at the front of the BLUE goal");
-                    break;
-                case 1:
-                    telemetry.addLine("STATUS: Starting at the front of the RED goal");
-                    break;
-                case 2:
-                    telemetry.addLine("STATUS: Starting at the BLUE small launch area");
-                    break;
-                default:
-                    telemetry.addLine("STATUS: Starting at the RED small launch area");
-                    break;
-            }
-        } else { // Team and starting position was not selected
-            telemetry.addLine("STATUS: Waiting..");
-        }
-
-        // Controls to select team
-        if (!teamSelected) {
-            if (gamepad1.x) {
-                selectedTeam = Team.BLUE;
-                startPosition = 0;
-                teamSelected = true;
-            } else if (gamepad1.y) {
-                selectedTeam = Team.RED;
-                startPosition = 1;
-                teamSelected = true;
-            }  else if (gamepad1.a) {
-                selectedTeam = Team.BLUE;
-                startPosition = 2;
-                teamSelected = true;
-            } else if (gamepad1.b) {
-                selectedTeam = Team.RED;
-                startPosition = 3;
-                teamSelected = true;
-            }
-        }
     }
 
     @Override
@@ -191,10 +119,38 @@ public class TeleOpMode extends OpMode {
     }
 
     @Override
+    public void stop() {
+        SharedPoseStorage.poseAvailable = false;
+        SharedPoseStorage.teamAvailable = false;
+        super.stop();
+    }
+
+    @Override
     public void start() {
         setupPosesForTeam();
 
-        follower.setStartingPose(startPose);
+        // Check if we have a team from autonomous
+        if (SharedPoseStorage.teamAvailable) {
+            selectedTeam = SharedPoseStorage.currentTeam;
+            teamSelected = true;
+            setupPosesForTeam();
+        } else {
+            teamSelected = false;
+        }
+
+        // Check if we have a pose from autonomous
+        if (SharedPoseStorage.poseAvailable) {
+            // Use the pose from autonomous
+            follower.setStartingPose(SharedPoseStorage.currentPose);
+            telemetry.addLine("Loaded pose from Autonomous!");
+            telemetry.addData("X", SharedPoseStorage.currentPose.getX());
+            telemetry.addData("Y", SharedPoseStorage.currentPose.getY());
+            telemetry.addData("Heading", Math.toDegrees(SharedPoseStorage.currentPose.getHeading()));
+        } else {
+            teamSelected = false;
+        }
+
+        telemetry.update();
         follower.startTeleopDrive();
     }
 
@@ -293,7 +249,7 @@ public class TeleOpMode extends OpMode {
         }
 
         // Auto Score with toggle
-        if (gamepad1.aWasPressed() && teamSelected) {
+        if (gamepad1.yWasPressed() && teamSelected) {
             if (!autoScoring && !autoParking) {
                 PathChain toScore = follower.pathBuilder()
                         .addPath(new BezierLine(follower.getPose(), scorePose))
@@ -301,14 +257,13 @@ public class TeleOpMode extends OpMode {
                         .build();
                 follower.followPath(toScore, true);
                 autoScoring = true;
-                gamepad1.rumble(rumbleTime);
             } else { // Stop AutoScore if driver hits A while AutoScore is happening
                 resetStates();
             }
         }
 
         // Auto Park with toggle
-        if (gamepad1.yWasPressed() && teamSelected) {
+        if (gamepad1.aWasPressed() && teamSelected) {
             if (!autoScoring && !autoParking) {
                 PathChain toBase = follower.pathBuilder()
                         .addPath(new BezierLine(follower.getPose(), basePose))
@@ -317,7 +272,6 @@ public class TeleOpMode extends OpMode {
                 follower.followPath(toBase, true);
                 autoParking = true;
                 autoParkFirstRun = true;
-                gamepad1.rumble(rumbleTime);
             } else { // Stop AutoPark if driver hits Y while an AutoPark is happening
                 resetStates();
             }
@@ -342,7 +296,6 @@ public class TeleOpMode extends OpMode {
                     autoParkFirstRun = false;
                 } else {
                     // Second run completed (or auto score finished)
-                    gamepad1.rumble(rumbleTime);
                     resetStates();
                 }
             }
@@ -424,8 +377,8 @@ public class TeleOpMode extends OpMode {
         telemetry.addLine("Right Action Button: Toggle Intake");
 
         if (teamSelected) {
-            telemetry.addLine("Top Action Button: AutoPark");
-            telemetry.addLine("Bottom Action Button: AutoScore");
+            telemetry.addLine("Bottom Action Button: Auto Park");
+            telemetry.addLine("Top Action Button: Auto Align");
             Drawing.drawDebug(follower);
         }
 
