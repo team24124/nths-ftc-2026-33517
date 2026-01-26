@@ -27,7 +27,7 @@ public class TeleOpMode extends OpMode {
     private TelemetryManager telemetryM;
 
     private DcMotorEx flywheel, flywheel2, intake;
-    private CRServo leftServo, rightServo;
+    private DcMotor leftFront, leftBack, rightFront, rightBack;
 
     /** Constants **/
     double microSpeed = 0.10; // for micro adjustment speed
@@ -91,28 +91,33 @@ public class TeleOpMode extends OpMode {
         // Initialize the motors and servos
         flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
         flywheel2 = hardwareMap.get(DcMotorEx.class, "flywheel2");
-        leftServo = hardwareMap.get(CRServo.class, "leftServo");
-        rightServo = hardwareMap.get(CRServo.class, "rightServo");
         intake = hardwareMap.get(DcMotorEx.class, "intake");
+        leftFront = hardwareMap.get(DcMotor.class, "leftFront");
+        leftBack = hardwareMap.get(DcMotor.class, "leftBack");
+        rightFront = hardwareMap.get(DcMotor.class, "rightFront");
+        rightBack = hardwareMap.get(DcMotor.class, "rightBack");
+
+        // Set wheels to brake mode
+        leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Flywheel PIDF tuning
-        double p = 9.0;
-        double i = 0.15;
-        double d = 0.6;
-        double f = 12.25;
+        double p = 0.25;
+        double i = 0.0003;
+        double d = 1.0;
+        double f = 14.0;
 
         flywheel.setVelocityPIDFCoefficients(p, i, d, f);
         flywheel2.setVelocityPIDFCoefficients(p, i, d, f);
 
         // Set zero power behaviour of the flywheel
-        flywheel.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
-        flywheel2.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+        flywheel.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        flywheel2.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
         // Reverse direction
         flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
-        intake.setDirection(DcMotorSimple.Direction.REVERSE);
-        leftServo.setDirection(DcMotorSimple.Direction.REVERSE);
-        rightServo.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Initialize the visualizer in panels
         Drawing.init();
@@ -214,7 +219,7 @@ public class TeleOpMode extends OpMode {
         // Big Flywheel Control
         if (gamepad1.left_trigger >= 0.5 && !debounce) {
             debounce = true;
-            if (flywheel.getVelocity() == 0) {
+            if (Math.abs(flywheel.getVelocity()) == 0) {
                 rotateFlywheel(flywheelSpeed);
             } else {
                 rotateFlywheel(0);
@@ -224,28 +229,28 @@ public class TeleOpMode extends OpMode {
         }
 
         // Check if up to speed
-        if (flywheel.getVelocity() >= flywheelSpeed && !reachedVelocity) {
+        if (Math.abs(flywheel.getVelocity()) >= flywheelSpeed && !reachedVelocity) {
             gamepad1.rumble(rumbleTime); // Let driver know flywheel is up to speed
             reachedVelocity = true;
-        } else if (flywheel.getVelocity() < flywheelSpeed - 25 && reachedVelocity) {
+        } else if (Math.abs(flywheel.getVelocity()) < flywheelSpeed - 25 && reachedVelocity) {
             reachedVelocity = false;
         }
 
         // Small Flywheel Control
-        if (gamepad1.right_trigger >= 0.1 && flywheel.getVelocity() >= 0) {
+        if (gamepad1.right_trigger >= 0.1 && Math.abs(flywheel.getVelocity()) >= 0) {
             if (!intakeToggle) {
                 intake.setPower(intakePower);
             }
 
-            if (flywheel.getVelocity() > flywheelSpeed / 2) {
-                rotateServos(1.0);
+            if (Math.abs(flywheel.getVelocity()) > flywheelSpeed / 2) {
+                //rotateServos(1.0);
             }
         } else {
             if (!intakeToggle) {
                 intake.setPower(0.0);
             }
 
-            rotateServos(0.0);
+            //rotateServos(0.0);
         }
 
         // Auto Score with toggle
@@ -349,7 +354,7 @@ public class TeleOpMode extends OpMode {
         telemetry.addData("Movement Speed", regularSpeed);
         telemetry.addData("Turning Speed", turnSpeed);
         telemetry.addData("Flywheel Targeted Velocity", flywheelSpeed);
-        telemetry.addData("Flywheel Real-Time Velocity", flywheel.getVelocity());
+        telemetry.addData("Flywheel Real-Time Velocity", Math.abs(flywheel.getVelocity()));
         telemetry.addData("Intake Status", (intake.getPower()) == 0 ? "Off" : "On");
         telemetry.addData("Intake Direction", (intakePower >= 0.0 ? "Forward" : "Reversed"));
 
@@ -388,10 +393,5 @@ public class TeleOpMode extends OpMode {
     private void rotateFlywheel(double speed) {
         flywheel.setVelocity(speed);
         flywheel2.setVelocity(speed);
-    }
-
-    private void rotateServos(double power) {
-        leftServo.setPower(power);
-        rightServo.setPower(power);
     }
 }
