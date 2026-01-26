@@ -68,10 +68,10 @@ public class TeleOpMode extends OpMode {
     public void setupPosesForTeam() {
         // Set positions based on selected team
        if (selectedTeam == SharedPoseStorage.Team.RED) {
-           basePose = new Pose(38.65, 33.25, Math.toRadians(180));
+           basePose = new Pose(38.65, 33.25, Math.toRadians(0));
            scorePose = new Pose(66, 132, Math.toRadians(0));
        } else {
-           basePose = new Pose(105, 33, Math.toRadians(0));
+           basePose = new Pose(105, 33, Math.toRadians(180));
            scorePose = new Pose(76, 132, Math.toRadians(180));
        }
     }
@@ -98,7 +98,7 @@ public class TeleOpMode extends OpMode {
         // Flywheel PIDF tuning
         double p = 9.0;
         double i = 0.15;
-        double d = 0.4;
+        double d = 0.6;
         double f = 12.25;
 
         flywheel.setVelocityPIDFCoefficients(p, i, d, f);

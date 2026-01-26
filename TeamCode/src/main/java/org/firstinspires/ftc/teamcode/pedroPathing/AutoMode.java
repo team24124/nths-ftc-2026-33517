@@ -48,10 +48,10 @@ public class AutoMode extends OpMode {
         // Set team poses based on driver input
         if (selectedTeam == SharedPoseStorage.Team.RED) { // Poses for Red team
             middlePose = new Pose(84, 84, Math.toRadians(43));
-            ballsPose = new Pose(96, 84, Math.toRadians(0));
-            ballsCapture = new Pose(127, 84, Math.toRadians(0));
-            ballsPose2 = new Pose(98, 56, Math.toRadians(0));
-            ballsCapture2 = new Pose(132, 56, Math.toRadians(0));
+            ballsPose = new Pose(96, 82, Math.toRadians(0));
+            ballsCapture = new Pose(127, 82, Math.toRadians(0));
+            ballsPose2 = new Pose(98, 57, Math.toRadians(0));
+            ballsCapture2 = new Pose(132, 57, Math.toRadians(0));
             ballsPose3 = new Pose(96, 35, Math.toRadians(0));
             ballsCapture3 = new Pose(132, 35, Math.toRadians(0));
             lever = new Pose(114, 72, Math.toRadians(0));
@@ -182,7 +182,7 @@ public class AutoMode extends OpMode {
         // Flywheel PIDF tuning
         double p = 9.0;
         double i = 0.15;
-        double d = 0.4;
+        double d = 0.6;
         double f = 12.25;
 
         flywheel.setVelocityPIDFCoefficients(p, i, d, f);
@@ -322,7 +322,7 @@ public class AutoMode extends OpMode {
             case 0:
                 if (mode == 1) {
                     rotateFlywheel(flywheelSpeed);
-                    rotateServos(0.7);
+                    rotateServos(0.55);
                     follower.followPath(toMiddle, true);
                     setPathState(1);
                 } else {
