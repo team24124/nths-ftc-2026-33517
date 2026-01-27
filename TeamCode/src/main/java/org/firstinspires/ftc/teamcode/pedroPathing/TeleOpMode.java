@@ -104,10 +104,10 @@ public class TeleOpMode extends OpMode {
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Flywheel PIDF tuning
-        double p = 1.5; // Fine tune speed
-        double i = 0.0001; // Fix steady state error/voltage drop
-        double d = 10.0; // Dampen oscillations
-        double f = 12.0; // Power to reach speed
+        double p = 0.6; // Fine tune speed
+        double i = 0.002; // Fix steady state error/voltage drop
+        double d = 11.0; // Dampen oscillations
+        double f = 12.5; // Power to reach speed
 
         flywheel.setVelocityPIDFCoefficients(p, i, d, f);
         flywheel2.setVelocityPIDFCoefficients(p, i, d, f);
