@@ -28,6 +28,7 @@ public class TeleOpMode extends OpMode {
 
     private DcMotorEx flywheel, flywheel2, intake;
     private DcMotor leftFront, leftBack, rightFront, rightBack;
+    private CRServo servos;
 
     /** Constants **/
     double microSpeed = 0.10; // for micro adjustment speed
@@ -96,6 +97,7 @@ public class TeleOpMode extends OpMode {
         leftBack = hardwareMap.get(DcMotor.class, "leftBack");
         rightFront = hardwareMap.get(DcMotor.class, "rightFront");
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
+        servos = hardwareMap.get(CRServo.class, "servos");
 
         // Set wheels to brake mode
         leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -104,8 +106,8 @@ public class TeleOpMode extends OpMode {
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Flywheel PIDF tuning
-        double p = 0.6; // Fine tune speed
-        double i = 0.002; // Fix steady state error/voltage drop
+        double p = 1.0; // Fine tune speed
+        double i = 0.0002; // Fix steady state error/voltage drop
         double d = 11.0; // Dampen oscillations
         double f = 12.5; // Power to reach speed
 
@@ -244,14 +246,14 @@ public class TeleOpMode extends OpMode {
             }
 
             if (Math.abs(flywheel.getVelocity()) > flywheelSpeed / 2) {
-                //rotateServos(1.0);
+                servos.setPower(1.0);
             }
         } else {
             if (!intakeToggle) {
                 intake.setPower(0.0);
             }
 
-            //rotateServos(0.0);
+            servos.setPower(0.0);
         }
 
         // Auto Score with toggle

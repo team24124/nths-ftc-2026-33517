@@ -7,6 +7,7 @@ import com.pedropathing.follower.Follower;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
@@ -17,6 +18,7 @@ public class TurretTuner extends OpMode {
     private TelemetryManager telemetryM;
 
     private DcMotorEx flywheel, flywheel2, intake;
+    private CRServo servos;
 
     /** Constants **/
     double regularSpeed = 0.80; // for regular movement speed
@@ -38,6 +40,7 @@ public class TurretTuner extends OpMode {
     double iIncrement = 0.0001;
     double dIncrement = 0.1;
     double fIncrement = 0.1;
+    boolean bigIncrement = false;
 
     private boolean debounce = false;
     private boolean reachedVelocity = false;
@@ -62,6 +65,7 @@ public class TurretTuner extends OpMode {
         flywheel = hardwareMap.get(DcMotorEx.class, "flywheel");
         flywheel2 = hardwareMap.get(DcMotorEx.class, "flywheel2");
         intake = hardwareMap.get(DcMotorEx.class, "intake");
+        servos = hardwareMap.get(CRServo.class, "servos");
 
         flywheel.setVelocityPIDFCoefficients(p, i, d, f);
         flywheel2.setVelocityPIDFCoefficients(p, i, d, f);
@@ -148,14 +152,14 @@ public class TurretTuner extends OpMode {
             }
 
             if (Math.abs(flywheel.getVelocity()) > flywheelSpeed / 2) {
-                //rotateServos(1.0);
+                servos.setPower(1.0);
             }
         } else {
             if (!intakeToggle) {
                 intake.setPower(0.0);
             }
 
-            //rotateServos(0.0);
+            servos.setPower(0.0);
         }
 
         handleTuning();
@@ -231,6 +235,22 @@ public class TurretTuner extends OpMode {
                     f += fIncrement;
                     updatePIDF = true;
                     break;
+            }
+        } else if (gamepad1.yWasPressed())  {
+            bigIncrement = !bigIncrement;
+
+            if (bigIncrement) {
+                pIncrement += 0.9;
+                iIncrement += 0.0009;
+                dIncrement += 0.9;
+                fIncrement += 0.9;
+                flywheelIncrement += 150;
+            } else {
+                pIncrement -= 0.9;
+                iIncrement -= 0.0009;
+                dIncrement -= 0.9;
+                fIncrement -= 0.9;
+                flywheelIncrement -= 150;
             }
         }
 
