@@ -33,7 +33,8 @@ public class TeleOpMode extends OpMode {
     /** Constants **/
     double microSpeed = 0.10; // for micro adjustment speed
     double regularSpeed = 0.80; // for regular movement speed
-    double flywheelSpeed = 1100.0; // flywheel speed
+    double flywheelSpeed = 3000.0; // flywheel speed
+    double targettedFlywheelSpeed = 1100.0; // speed to target for shooting
     double turnSpeed = 0.50; // for rotation speed
     double slowParkPower = 0.2; // for parking correction speed
     int rumbleTime = 250; // in milliseconds
@@ -70,10 +71,10 @@ public class TeleOpMode extends OpMode {
         // Set positions based on selected team
        if (selectedTeam == SharedPoseStorage.Team.RED) {
            basePose = new Pose(38.65, 33.25, Math.toRadians(0));
-           scorePose = new Pose(66, 132, Math.toRadians(0));
+           scorePose = new Pose(72, 132, Math.toRadians(0));
        } else {
            basePose = new Pose(105, 33, Math.toRadians(180));
-           scorePose = new Pose(76, 132, Math.toRadians(180));
+           scorePose = new Pose(72, 132, Math.toRadians(180));
        }
     }
 
@@ -106,10 +107,10 @@ public class TeleOpMode extends OpMode {
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Flywheel PIDF tuning
-        double p = 1.0; // Fine tune speed
-        double i = 0.0002; // Fix steady state error/voltage drop
-        double d = 11.0; // Dampen oscillations
-        double f = 12.5; // Power to reach speed
+        double p = 0.4; // Fine tune speed
+        double i = 0.0; // Fix steady state error/voltage drop
+        double d = 2.0; // Dampen oscillations
+        double f = 5.0; // Power to reach speed
 
         flywheel.setVelocityPIDFCoefficients(p, i, d, f);
         flywheel2.setVelocityPIDFCoefficients(p, i, d, f);
@@ -232,10 +233,10 @@ public class TeleOpMode extends OpMode {
         }
 
         // Check if up to speed
-        if (Math.abs(flywheel.getVelocity()) >= flywheelSpeed && !reachedVelocity) {
+        if (Math.abs(flywheel.getVelocity()) >= targettedFlywheelSpeed && !reachedVelocity) {
             gamepad1.rumble(rumbleTime); // Let driver know flywheel is up to speed
             reachedVelocity = true;
-        } else if (Math.abs(flywheel.getVelocity()) < flywheelSpeed - 25 && reachedVelocity) {
+        } else if (Math.abs(flywheel.getVelocity()) < targettedFlywheelSpeed - 25 && reachedVelocity) {
             reachedVelocity = false;
         }
 
@@ -245,7 +246,7 @@ public class TeleOpMode extends OpMode {
                 intake.setPower(intakePower);
             }
 
-            if (Math.abs(flywheel.getVelocity()) > flywheelSpeed / 2) {
+            if (Math.abs(flywheel.getVelocity()) > targettedFlywheelSpeed / 2) {
                 servos.setPower(1.0);
             }
         } else {
@@ -356,7 +357,7 @@ public class TeleOpMode extends OpMode {
         telemetry.addLine("====ROBOT INFO====");
         telemetry.addData("Movement Speed", regularSpeed);
         telemetry.addData("Turning Speed", turnSpeed);
-        telemetry.addData("Flywheel Targeted Velocity", flywheelSpeed);
+        telemetry.addData("Flywheel Targeted Velocity", targettedFlywheelSpeed);
         telemetry.addData("Flywheel Real-Time Velocity", Math.abs(flywheel.getVelocity()));
         telemetry.addData("Intake Status", (intake.getPower()) == 0 ? "Off" : "On");
         telemetry.addData("Intake Direction", (intakePower >= 0.0 ? "Forward" : "Reversed"));

@@ -151,7 +151,7 @@ public class TurretTuner extends OpMode {
                 intake.setPower(intakePower);
             }
 
-            if (Math.abs(flywheel.getVelocity()) > flywheelSpeed / 2) {
+            if (Math.abs(flywheel.getVelocity()) > 0) {
                 servos.setPower(1.0);
             }
         } else {
