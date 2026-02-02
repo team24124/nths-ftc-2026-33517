@@ -24,7 +24,7 @@
         private double flywheelSpeed = 3000.0; // Default flywheel speed
         private double targettedFlywheelSpeed = 1200.0;
         private double shootingTime = 5.5; // Time to shoot all 3 balls (s)
-        private double intakeBotSpeed = 0.3; // 0.0-1.0 Determines speed of the BOT while collecting balls
+        private double intakeBotSpeed = 0.5; // 0.0-1.0 Determines speed of the BOT while collecting balls
 
         private DcMotorEx flywheel, flywheel2, intake;
         private CRServo servos;
@@ -48,22 +48,22 @@
         private void setPosesForTeam() {
             // Set team poses based on driver input
             if (selectedTeam == SharedPoseStorage.Team.RED) { // Poses for Red team
-                middlePose = new Pose(84, 84, Math.toRadians(45));
-                ballsPose = new Pose(96, 84, Math.toRadians(0));
-                ballsCapture = new Pose(144, 84, Math.toRadians(0));
-                ballsPose2 = new Pose(98, 60, Math.toRadians(0));
-                ballsCapture2 = new Pose(132, 60, Math.toRadians(0));
-                ballsPose3 = new Pose(96, 40, Math.toRadians(0));
-                ballsCapture3 = new Pose(132, 40, Math.toRadians(0));
+                middlePose = new Pose(84, 84, Math.toRadians(43));
+                ballsPose = new Pose(96, 83, Math.toRadians(0));
+                ballsCapture = new Pose(144, 83, Math.toRadians(0));
+                ballsPose2 = new Pose(98, 59, Math.toRadians(0));
+                ballsCapture2 = new Pose(132, 59, Math.toRadians(0));
+                ballsPose3 = new Pose(96, 35, Math.toRadians(0));
+                ballsCapture3 = new Pose(130, 35, Math.toRadians(0));
                 lever = new Pose(114, 72, Math.toRadians(0));
             } else { // Poses for Blue team
-                middlePose = new Pose(60, 84, Math.toRadians(135));
-                ballsPose = new Pose(48, 84, Math.toRadians(180));
-                ballsCapture = new Pose(0, 84, Math.toRadians(180));
-                ballsPose2 = new Pose(46, 60, Math.toRadians(180));
-                ballsCapture2 = new Pose(12, 60, Math.toRadians(180));
-                ballsPose3 = new Pose(48, 40, Math.toRadians(180));
-                ballsCapture3 = new Pose(12, 40, Math.toRadians(180));
+                middlePose = new Pose(60, 84, Math.toRadians(133));
+                ballsPose = new Pose(48, 83, Math.toRadians(180));
+                ballsCapture = new Pose(0, 83, Math.toRadians(180));
+                ballsPose2 = new Pose(46, 59, Math.toRadians(180));
+                ballsCapture2 = new Pose(12, 59, Math.toRadians(180));
+                ballsPose3 = new Pose(48, 35, Math.toRadians(180));
+                ballsCapture3 = new Pose(10, 35, Math.toRadians(180));
                 lever = new Pose(30, 72, Math.toRadians(180));
             }
 
@@ -321,7 +321,7 @@
                     if (mode == 1) {
                         rotateFlywheel(flywheelSpeed);
                         intake.setPower(1.0);
-                        //servos.setPower(0.1);
+                        servos.setPower(0.2);
                         follower.followPath(toMiddle, true);
                         setPathState(1);
                     } else {
@@ -354,7 +354,7 @@
                     break;
                 case 7:
                     rotateFlywheel(flywheelSpeed);
-                    follower.setMaxPower(1.0);;
+                    follower.setMaxPower(1.0);
                     follower.followPath(returnFromTop, true);
                     //servos.setPower(0.1);
                     setPathState(8);
@@ -466,13 +466,13 @@
                     return false;
                 case 1:
                     // Wait for flywheel to reach speed
-                    if (Math.abs(flywheel.getVelocity()) >= targettedFlywheelSpeed) {
+                    if (Math.abs(flywheel.getVelocity()) >= targettedFlywheelSpeed - 90) {
                         shootingSubState = 2;
                     }
                     return false;
                 case 2:
                     // Make sure flywheel is at speed before shooting
-                    if (Math.abs(flywheel.getVelocity()) >= targettedFlywheelSpeed) {
+                    if (Math.abs(flywheel.getVelocity()) >= targettedFlywheelSpeed - 90) {
                         shootingSubState = 3; // Move to actually shooting
                     }
                     return false;
