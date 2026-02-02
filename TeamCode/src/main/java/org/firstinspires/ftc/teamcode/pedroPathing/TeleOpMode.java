@@ -34,7 +34,7 @@ public class TeleOpMode extends OpMode {
     double microSpeed = 0.10; // for micro adjustment speed
     double regularSpeed = 0.80; // for regular movement speed
     double flywheelSpeed = 3000.0; // flywheel speed
-    double targettedFlywheelSpeed = 1100.0; // speed to target for shooting
+    double targettedFlywheelSpeed = 1200.0; // speed to target for shooting
     double turnSpeed = 0.50; // for rotation speed
     double slowParkPower = 0.2; // for parking correction speed
     int rumbleTime = 250; // in milliseconds
@@ -107,7 +107,7 @@ public class TeleOpMode extends OpMode {
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Flywheel PIDF tuning
-        double p = 0.4; // Fine tune speed
+        double p = 0.7; // Fine tune speed
         double i = 0.0; // Fix steady state error/voltage drop
         double d = 2.0; // Dampen oscillations
         double f = 5.0; // Power to reach speed
