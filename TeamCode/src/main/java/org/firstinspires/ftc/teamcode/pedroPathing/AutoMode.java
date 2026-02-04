@@ -23,7 +23,7 @@
         // Constants
         private double flywheelSpeed = 3000.0; // Default flywheel speed
         private double targettedFlywheelSpeed = 1200.0;
-        private double intakeBotSpeed = 0.9; // 0.0-1.0 Determines speed of the BOT while collecting balls
+        private double intakeBotSpeed = 1.0; // 0.0-1.0 Determines speed of the BOT while collecting balls
 
         private DcMotorEx flywheel, flywheel2, intake;
         private CRServo servos;
@@ -46,7 +46,7 @@
          */
         private int startPosition = 0;
 
-        private Pose startPose, middlePose, ballsPose, ballsCapture, ballsPose2, ballsCapture2, ballsPose3, ballsCapture3, smallLaunch, lever, passivePose;
+        private Pose startPose, middlePose, ballsPose, ballsCapture, ballsPose2, ballsCapture2, ballsPose3, ballsCapture3, smallLaunch, lever, passivePose, middleBalls;
 
         private PathChain toMiddle, toTopBalls, captureTop, returnFromTop, toMiddleBalls, captureMiddle, returnFromMiddle, toBottomBalls, captureBottom, returnFromBottom, toLever, toPassive;
 
@@ -55,11 +55,11 @@
             if (selectedTeam == SharedPoseStorage.Team.RED) { // Poses for Red team
                 middlePose = new Pose(84, 84, Math.toRadians(46.5));
                 ballsPose = new Pose(96, 83, Math.toRadians(0));
-                ballsCapture = new Pose(132, 83, Math.toRadians(0));
+                ballsCapture = new Pose(133, 83, Math.toRadians(0));
                 ballsPose2 = new Pose(98, 58, Math.toRadians(0));
-                ballsCapture2 = new Pose(134, 58, Math.toRadians(0));
+                ballsCapture2 = new Pose(140, 58, Math.toRadians(0));
                 ballsPose3 = new Pose(96, 35, Math.toRadians(0));
-                ballsCapture3 = new Pose(134, 35, Math.toRadians(0));
+                ballsCapture3 = new Pose(136, 35, Math.toRadians(0));
                 smallLaunch = new Pose(84, 12, Math.toRadians(70));
                 lever = new Pose(114, 72, Math.toRadians(0));
             } else { // Poses for Blue team
@@ -164,6 +164,11 @@
                     .setLinearHeadingInterpolation(middlePose.getHeading(), lever.getHeading())
                     .build();
 
+            toMiddleBalls = follower.pathBuilder()
+                    .addPath(new BezierLine(ballsCapture2, middleBalls))
+                    .setLinearHeadingInterpolation(ballsCapture2.getHeading(), middleBalls.getHeading())
+                    .build();
+
             if (mode == 0) {
                 toPassive = follower.pathBuilder()
                         .addPath(new BezierLine(startPose, passivePose))
@@ -187,7 +192,7 @@
             servos = hardwareMap.get(CRServo.class, "servos");
 
             // Flywheel PIDF tuning
-            double p = 0.8; // Fine tune speed
+            double p = 0.6; // Fine tune speed
             double i = 0.0005; // Fix steady state error/voltage drop
             double d = 2.0; // Dampen oscillations
             double f = 5.0; // Power to reach speed
@@ -332,7 +337,7 @@
                         follower.followPath(toMiddle, true);
                         setPathState(1);
                     } else {
-                        setPathState(27);
+                        setPathState(29);  // Updated for new case count
                     }
                     break;
                 case 1:
@@ -353,7 +358,7 @@
                 case 5:
                     follower.setMaxPower(intakeBotSpeed);
                     intake.setPower(1.0);
-                    //servos.setPower(0.07);
+                    servos.setPower(1.0);
                     follower.followPath(captureTop, true);
                     setPathState(6);
                     break;
@@ -364,6 +369,7 @@
                     rotateFlywheel(flywheelSpeed);
                     follower.setMaxPower(1.0);
                     follower.followPath(returnFromTop, true);
+                    servos.setPower(0.0);
                     setPathState(8);
                     break;
                 case 8:
@@ -384,7 +390,7 @@
                 case 12:
                     follower.setMaxPower(intakeBotSpeed);
                     intake.setPower(1.0);
-                    //servos.setPower(0.3);
+                    servos.setPower(1.0);
                     follower.followPath(captureMiddle, true);
                     setPathState(13);
                     break;
@@ -392,77 +398,131 @@
                     checkIfBusy(14, 0);
                     break;
                 case 14:
-                    rotateFlywheel(flywheelSpeed);
                     follower.setMaxPower(1.0);
-                    follower.followPath(returnFromMiddle, true);
+                    follower.followPath(toMiddleBalls, true);
+                    servos.setPower(0.0);
                     setPathState(15);
                     break;
                 case 15:
                     checkIfBusy(16, 0);
                     break;
                 case 16:
-                    if (shootBalls()) {
-                        setPathState(17);
-                    }
+                    rotateFlywheel(flywheelSpeed);
+                    follower.setMaxPower(1.0);
+                    follower.followPath(returnFromMiddle, true);
+                    setPathState(17);
                     break;
                 case 17:
-                    follower.followPath(toBottomBalls, true);
-                    setPathState(18);
+                    checkIfBusy(18, 0);
                     break;
                 case 18:
-                    checkIfBusy(19, 0);
+                    if (shootBalls()) {
+                        setPathState(19);
+                    }
                     break;
                 case 19:
-                    follower.setMaxPower(intakeBotSpeed);
-                    intake.setPower(1.0);
-                    //servos.setPower(0.2);
-                    follower.followPath(captureBottom, true);
+                    follower.followPath(toBottomBalls, true);
                     setPathState(20);
                     break;
                 case 20:
                     checkIfBusy(21, 0);
                     break;
                 case 21:
-                    flywheel.setVelocityPIDFCoefficients(longP, longI, longD, longF);
-                    flywheel2.setVelocityPIDFCoefficients(longP, longI, longD, longF);
-                    rotateFlywheel(flywheelSpeed);
-                    follower.setMaxPower(1.0);
-                    follower.followPath(returnFromBottom, true);
+                    follower.setMaxPower(intakeBotSpeed);
+                    intake.setPower(1.0);
+                    servos.setPower(1.0);
+                    follower.followPath(captureBottom, true);
                     setPathState(22);
                     break;
                 case 22:
                     checkIfBusy(23, 0);
                     break;
                 case 23:
-                    if (shootBalls()) {
-                        setPathState(24);
-                    }
+                    //flywheel.setVelocityPIDFCoefficients(longP, longI, longD, longF);
+                    //flywheel2.setVelocityPIDFCoefficients(longP, longI, longD, longF);
+                    rotateFlywheel(flywheelSpeed);
+                    follower.setMaxPower(1.0);
+                    servos.setPower(0.0);
+                    follower.followPath(returnFromBottom, true);
+                    setPathState(24);
                     break;
                 case 24:
-                    follower.followPath(toLever, true);
-                    setPathState(25);
+                    checkIfBusy(25, 0);
                     break;
                 case 25:
-                    checkIfBusy(26, 0);
+                    if (shootBalls()) {
+                        setPathState(26);
+                    }
                     break;
                 case 26:
+                    follower.followPath(toLever, true);
+                    setPathState(27);
+                    break;
+                case 27:
+                    checkIfBusy(28, 0);
+                    break;
+                case 28:
                     servos.setPower(0.0);
                     flywheel.setPower(0.0);
                     intake.setPower(0.0);
                     break;
                 // CASES AFTER THIS IS FOR IDLE PATHING
-                case 27:
+                case 29:
                     follower.followPath(toPassive, true);
-                    setPathState(28);
+                    setPathState(30);
                     break;
-                case 28:
-                    checkIfBusy(26, 0);
+                case 30:
+                    checkIfBusy(28, 0);
                     break;
             }
         }
 
-        /** Shooter Handling - Continuous Servo Version **/
+        /** Shooter Handling - Time-Based Version **/
         private int shootingSubState = 0;
+        private Timer shootTimer;
+
+        /** Alternative: Simple sequential time-based version **/
+        public boolean shootBalls() {
+            switch (shootingSubState) {
+                case 0:
+                    // Initialize
+                    if (shootTimer == null) {
+                        shootTimer = new Timer();
+                    }
+                    shootTimer.resetTimer();
+                    shootingSubState = 1;
+                    return false;
+
+                case 1:
+                    // Wait for flywheel to reach speed
+                    if (Math.abs(flywheel.getVelocity()) >= targettedFlywheelSpeed - 170) {
+                        servos.setPower(1.0);
+                        intake.setPower(1.0);
+                        shootTimer.resetTimer();
+                        shootingSubState = 2;
+                    }
+                    return false;
+
+                case 2:
+                    // Run servos and intake for fixed duration (3 balls @ ~0.5s each + buffer)
+                    if (shootTimer.getElapsedTimeSeconds() > 3.0) {
+                        servos.setPower(0.0);
+                        rotateFlywheel(0);
+                        intake.setPower(0.0);
+                        shootingSubState = 0;
+                        return true;
+                    }
+                    return false;
+
+                default:
+                    shootingSubState = 0;
+                    return true;
+            }
+        }
+
+
+        /** Shooter Handling - Continuous Servo Version **/
+        /*private int shootingSubState = 0;
         private int ballsShot = 0;
         private boolean waitingForDrop = false;
         private double lastVelocity = 0.0;
@@ -500,7 +560,7 @@
                         }
 
                         // Check if flywheel dropped significantly from last peak (ball was shot)
-                        if (currentVelocity < lastVelocity - 100) {
+                        if (currentVelocity < lastVelocity - 55) {
                             ballsShot++;
                             waitingForDrop = false; // Don't count same drop twice
                         }
@@ -519,62 +579,6 @@
                         rotateFlywheel(0);
                         shootingSubState = 0;
                         return true;
-                    }
-                    return false;
-                default:
-                    return true;
-            }
-        }
-
-        /** Shooter Handling **/
-        /*private int shootingSubState = 0;
-        private int ballsShot = 0;
-
-        public boolean shootBalls() {
-            switch (shootingSubState) {
-                case 0:
-                    // Initialize shooting
-                    ballsShot = 0;
-                    shootingSubState = 1;
-                    return false;
-                case 1:
-                    // Wait for flywheel to reach speed
-                    if (Math.abs(flywheel.getVelocity()) >= targettedFlywheelSpeed - 170) {
-                        shootingSubState = 2;
-                    }
-                    return false;
-                case 2:
-                    // Make sure flywheel is at speed before shooting
-                    if (Math.abs(flywheel.getVelocity()) >= targettedFlywheelSpeed - 170) {
-                        shootingSubState = 3; // Move to actually shooting
-                    }
-                    return false;
-                case 3:
-                    // Run servos and wait for velocity drop
-                    servos.setPower(1.0);
-                    intake.setPower(1.0);
-
-                    // Check if flywheel dropped (ball was shot)
-                    if (Math.abs(flywheel.getVelocity()) < targettedFlywheelSpeed - 180) {
-                        // Ball was shot, stop servos and wait for recovery
-                        servos.setPower(0.0);
-                        ballsShot++;
-                        shootingSubState = 4;
-                    }
-                    return false;
-                case 4:
-                    // Wait for flywheel to recover to speed
-                    if (Math.abs(flywheel.getVelocity()) >= targettedFlywheelSpeed - 170) {
-                        // Flywheel recovered - check if done or shoot next
-                        if (ballsShot >= 3) {
-                            // All balls shot, finish up
-                            rotateFlywheel(0);
-                            shootingSubState = 0;
-                            return true;
-                        } else {
-                            // Ready for next ball - go back to case 2 to ensure flywheel is at speed
-                            shootingSubState = 2;
-                        }
                     }
                     return false;
                 default:
