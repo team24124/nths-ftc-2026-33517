@@ -71,10 +71,10 @@ public class TeleOpMode extends OpMode {
         // Set positions based on selected team
        if (selectedTeam == SharedPoseStorage.Team.RED) {
            basePose = new Pose(38.65, 33.25, Math.toRadians(0));
-           scorePose = new Pose(72, 132, Math.toRadians(0));
+           scorePose = new Pose(60, 132, Math.toRadians(0));
        } else {
            basePose = new Pose(105, 33, Math.toRadians(180));
-           scorePose = new Pose(72, 132, Math.toRadians(180));
+           scorePose = new Pose(84, 132, Math.toRadians(180));
        }
     }
 
@@ -107,8 +107,8 @@ public class TeleOpMode extends OpMode {
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Flywheel PIDF tuning
-        double p = 0.6; // Fine tune speed
-        double i = 0.0; // Fix steady state error/voltage drop
+        double p = 0.5; // Fine tune speed
+        double i = 0.0005; // Fix steady state error/voltage drop
         double d = 2.0; // Dampen oscillations
         double f = 5.0; // Power to reach speed
 
