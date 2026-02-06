@@ -46,9 +46,9 @@
          */
         private int startPosition = 0;
 
-        private Pose startPose, middlePose, ballsPose, ballsCapture, ballsPose2, ballsCapture2, ballsPose3, ballsCapture3, smallLaunch, lever, passivePose, middleBalls;
+        private Pose startPose, middlePose, ballsPose, ballsCapture, ballsPose2, ballsCapture2, ballsPose3, ballsCapture3, smallLaunch, lever, passivePose, middleBalls, leverHit;
 
-        private PathChain toMiddle, toTopBalls, captureTop, returnFromTop, toMiddleBalls, captureMiddle, returnFromMiddle, toBottomBalls, captureBottom, returnFromBottom, toLever, toPassive;
+        private PathChain toMiddle, toTopBalls, captureTop, returnFromTop, toMiddleBalls, captureMiddle, returnFromMiddle, toBottomBalls, captureBottom, returnFromBottom, toLever, toPassive, hitLever;
 
         private void setPosesForTeam() {
             // Set team poses based on driver input
@@ -56,23 +56,25 @@
                 middlePose = new Pose(84, 84, Math.toRadians(45));
                 ballsPose = new Pose(96, 83, Math.toRadians(0));
                 ballsCapture = new Pose(133, 83, Math.toRadians(0));
-                ballsPose2 = new Pose(98, 58, Math.toRadians(0));
-                ballsCapture2 = new Pose(142, 58, Math.toRadians(0));
+                ballsPose2 = new Pose(98, 60, Math.toRadians(0));
+                ballsCapture2 = new Pose(142, 60, Math.toRadians(0));
                 ballsPose3 = new Pose(96, 35, Math.toRadians(0));
                 ballsCapture3 = new Pose(133, 35, Math.toRadians(0));
                 smallLaunch = new Pose(84, 12, Math.toRadians(70));
                 middleBalls = new Pose(120, 60, Math.toRadians(0));
+                leverHit = new Pose(138, 61, Math.toRadians(90));
                 lever = new Pose(114, 72, Math.toRadians(90));
             } else { // Poses for Blue team
                 middlePose = new Pose(60, 84, Math.toRadians(135));
                 ballsPose = new Pose(48, 83, Math.toRadians(180));
                 ballsCapture = new Pose(11, 83, Math.toRadians(180));
-                ballsPose2 = new Pose(46, 58, Math.toRadians(180));
-                ballsCapture2 = new Pose(2, 58, Math.toRadians(180));
+                ballsPose2 = new Pose(46, 60, Math.toRadians(180));
+                ballsCapture2 = new Pose(2, 60, Math.toRadians(180));
                 ballsPose3 = new Pose(48, 35, Math.toRadians(180));
                 ballsCapture3 = new Pose(11, 35, Math.toRadians(180));
                 smallLaunch = new Pose(60, 12, Math.toRadians(110));
                 middleBalls = new Pose(24, 60, Math.toRadians(180));
+                leverHit = new Pose(6, 61, Math.toRadians(90));
                 lever = new Pose(30, 72, Math.toRadians(90));
             }
 
@@ -169,6 +171,11 @@
             toMiddleBalls = follower.pathBuilder()
                     .addPath(new BezierLine(ballsCapture2, middleBalls))
                     .setLinearHeadingInterpolation(ballsCapture2.getHeading(), middleBalls.getHeading())
+                    .build();
+
+            hitLever = follower.pathBuilder()
+                    .addPath(new BezierLine(middleBalls, leverHit))
+                    .setLinearHeadingInterpolation(middleBalls.getHeading(), leverHit.getHeading())
                     .build();
 
             if (mode == 0) {
@@ -339,7 +346,7 @@
                         follower.followPath(toMiddle, true);
                         setPathState(1);
                     } else {
-                        setPathState(29);  // Updated for new case count
+                        setPathState(31);
                     }
                     break;
                 case 1:
@@ -409,72 +416,79 @@
                     checkIfBusy(16, 0);
                     break;
                 case 16:
-                    rotateFlywheel(flywheelSpeed);
-                    follower.setMaxPower(1.0);
-                    follower.followPath(returnFromMiddle, true);
+                    follower.followPath(hitLever, true);
                     setPathState(17);
                     break;
                 case 17:
                     checkIfBusy(18, 0);
                     break;
                 case 18:
-                    if (shootBalls()) {
-                        setPathState(19);
-                    }
+                    rotateFlywheel(flywheelSpeed);
+                    follower.setMaxPower(1.0);
+                    follower.followPath(returnFromMiddle, true);
+                    setPathState(19);
                     break;
                 case 19:
-                    follower.followPath(toBottomBalls, true);
-                    setPathState(20);
+                    checkIfBusy(20, 0);
                     break;
                 case 20:
-                    checkIfBusy(21, 0);
+                    if (shootBalls()) {
+                        setPathState(21);
+                    }
                     break;
                 case 21:
-                    follower.setMaxPower(intakeBotSpeed);
-                    intake.setPower(1.0);
-                    servos.setPower(1.0);
-                    follower.followPath(captureBottom, true);
+                    follower.followPath(toBottomBalls, true);
                     setPathState(22);
                     break;
                 case 22:
                     checkIfBusy(23, 0);
                     break;
                 case 23:
-                    //flywheel.setVelocityPIDFCoefficients(longP, longI, longD, longF);
-                    //flywheel2.setVelocityPIDFCoefficients(longP, longI, longD, longF);
-                    rotateFlywheel(flywheelSpeed);
-                    follower.setMaxPower(1.0);
-                    servos.setPower(0.0);
-                    follower.followPath(returnFromBottom, true);
+                    follower.setMaxPower(intakeBotSpeed);
+                    intake.setPower(1.0);
+                    servos.setPower(1.0);
+                    follower.followPath(captureBottom, true);
                     setPathState(24);
                     break;
                 case 24:
                     checkIfBusy(25, 0);
                     break;
                 case 25:
-                    if (shootBalls()) {
-                        setPathState(26);
-                    }
+                    //flywheel.setVelocityPIDFCoefficients(longP, longI, longD, longF);
+                    //flywheel2.setVelocityPIDFCoefficients(longP, longI, longD, longF);
+                    rotateFlywheel(flywheelSpeed);
+                    follower.setMaxPower(1.0);
+                    servos.setPower(0.0);
+                    follower.followPath(returnFromBottom, true);
+                    setPathState(26);
                     break;
                 case 26:
-                    follower.followPath(toLever, true);
-                    setPathState(27);
+                    checkIfBusy(27, 0);
                     break;
                 case 27:
-                    checkIfBusy(28, 0);
+                    if (shootBalls()) {
+                        setPathState(28);
+                    }
                     break;
                 case 28:
+                    follower.followPath(toLever, true);
+                    setPathState(29);
+                    break;
+                case 29:
+                    checkIfBusy(30, 0);
+                    break;
+                case 30:
                     servos.setPower(0.0);
                     flywheel.setPower(0.0);
                     intake.setPower(0.0);
                     break;
                 // CASES AFTER THIS IS FOR IDLE PATHING
-                case 29:
+                case 31:
                     follower.followPath(toPassive, true);
-                    setPathState(30);
+                    setPathState(32);
                     break;
-                case 30:
-                    checkIfBusy(28, 0);
+                case 32:
+                    checkIfBusy(30, 0);
                     break;
             }
         }
