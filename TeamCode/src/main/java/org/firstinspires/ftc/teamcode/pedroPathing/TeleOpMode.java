@@ -34,7 +34,7 @@ public class TeleOpMode extends OpMode {
     double microSpeed = 0.10; // for micro adjustment speed
     double regularSpeed = 0.80; // for regular movement speed
     double flywheelSpeed = 3000.0; // flywheel speed
-    double targettedFlywheelSpeed = 1200.0; // speed to target for shooting
+    double targettedFlywheelSpeed = 1100.0; // speed to target for shooting
     double turnSpeed = 0.50; // for rotation speed
     double slowParkPower = 0.2; // for parking correction speed
     int rumbleTime = 250; // in milliseconds
@@ -70,11 +70,11 @@ public class TeleOpMode extends OpMode {
     public void setupPosesForTeam() {
         // Set positions based on selected team
        if (selectedTeam == SharedPoseStorage.Team.RED) {
-           basePose = new Pose(38.65, 33.25, Math.toRadians(0));
-           scorePose = new Pose(60, 132, Math.toRadians(0));
+           basePose = new Pose(38.65, 33.1, Math.toRadians(0));
+           scorePose = new Pose(84, 84, Math.toRadians(45));
        } else {
-           basePose = new Pose(105, 33, Math.toRadians(180));
-           scorePose = new Pose(84, 132, Math.toRadians(180));
+           basePose = new Pose(105, 33.3, Math.toRadians(180));
+           scorePose = new Pose(60, 84, Math.toRadians(135));
        }
     }
 
@@ -263,6 +263,7 @@ public class TeleOpMode extends OpMode {
                 PathChain toScore = follower.pathBuilder()
                         .addPath(new BezierLine(follower.getPose(), scorePose))
                         .setLinearHeadingInterpolation(follower.getPose().getHeading(), scorePose.getHeading())
+                        .setTValueConstraint(1000)
                         .build();
                 follower.followPath(toScore, true);
                 autoScoring = true;
@@ -277,6 +278,7 @@ public class TeleOpMode extends OpMode {
                 PathChain toBase = follower.pathBuilder()
                         .addPath(new BezierLine(follower.getPose(), basePose))
                         .setLinearHeadingInterpolation(follower.getPose().getHeading(), basePose.getHeading())
+                        .setTValueConstraint(1000)
                         .build();
                 follower.followPath(toBase, true);
                 autoParking = true;

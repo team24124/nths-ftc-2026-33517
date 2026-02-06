@@ -55,25 +55,25 @@
             if (selectedTeam == SharedPoseStorage.Team.RED) { // Poses for Red team
                 middlePose = new Pose(84, 84, Math.toRadians(45));
                 ballsPose = new Pose(96, 83, Math.toRadians(0));
-                ballsCapture = new Pose(133, 83, Math.toRadians(0));
-                ballsPose2 = new Pose(98, 60, Math.toRadians(0));
-                ballsCapture2 = new Pose(142, 60, Math.toRadians(0));
+                ballsCapture = new Pose(131, 83, Math.toRadians(0));
+                ballsPose2 = new Pose(98, 59, Math.toRadians(0));
+                ballsCapture2 = new Pose(143, 59, Math.toRadians(0));
                 ballsPose3 = new Pose(96, 35, Math.toRadians(0));
-                ballsCapture3 = new Pose(133, 35, Math.toRadians(0));
+                ballsCapture3 = new Pose(139, 35, Math.toRadians(0));
                 smallLaunch = new Pose(84, 12, Math.toRadians(70));
-                middleBalls = new Pose(120, 60, Math.toRadians(0));
+                middleBalls = new Pose(111, 60, Math.toRadians(0));
                 leverHit = new Pose(138, 61, Math.toRadians(90));
                 lever = new Pose(114, 72, Math.toRadians(90));
             } else { // Poses for Blue team
                 middlePose = new Pose(60, 84, Math.toRadians(135));
                 ballsPose = new Pose(48, 83, Math.toRadians(180));
-                ballsCapture = new Pose(11, 83, Math.toRadians(180));
-                ballsPose2 = new Pose(46, 60, Math.toRadians(180));
-                ballsCapture2 = new Pose(2, 60, Math.toRadians(180));
+                ballsCapture = new Pose(13, 83, Math.toRadians(180));
+                ballsPose2 = new Pose(46, 59, Math.toRadians(180));
+                ballsCapture2 = new Pose(1, 59, Math.toRadians(180));
                 ballsPose3 = new Pose(48, 35, Math.toRadians(180));
-                ballsCapture3 = new Pose(11, 35, Math.toRadians(180));
+                ballsCapture3 = new Pose(5, 35, Math.toRadians(180));
                 smallLaunch = new Pose(60, 12, Math.toRadians(110));
-                middleBalls = new Pose(24, 60, Math.toRadians(180));
+                middleBalls = new Pose(33, 60, Math.toRadians(180));
                 leverHit = new Pose(6, 61, Math.toRadians(90));
                 lever = new Pose(30, 72, Math.toRadians(90));
             }
@@ -81,7 +81,7 @@
             // Set starting positions
             switch (startPosition) {
                 case 0:
-                    startPose = new Pose(22.25, 125, Math.toRadians(144));
+                    startPose = new Pose(22.25, 125, Math.toRadians(140));
                     break;
                 case 1:
                     startPose = new Pose(121.75, 125, Math.toRadians(36));
