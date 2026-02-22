@@ -493,7 +493,7 @@
             }
         }
 
-        /** Shooter Handling - Time-Based Version **/
+        /** Shooter Handling **/
         private int shootingSubState = 0;
         private Timer shootTimer;
 
@@ -536,71 +536,6 @@
             }
         }
 
-
-        /** Shooter Handling - Continuous Servo Version **/
-        /*private int shootingSubState = 0;
-        private int ballsShot = 0;
-        private boolean waitingForDrop = false;
-        private double lastVelocity = 0.0;
-
-        public boolean shootBalls() {
-            switch (shootingSubState) {
-                case 0:
-                    // Initialize shooting
-                    ballsShot = 0;
-                    waitingForDrop = false;
-                    lastVelocity = 0.0;
-                    shootingSubState = 1;
-                    return false;
-                case 1:
-                    // Wait for flywheel to reach initial speed ONCE
-                    if (Math.abs(flywheel.getVelocity()) >= targettedFlywheelSpeed - 170) {
-                        shootingSubState = 2;
-                    }
-                    return false;
-                case 2:
-                    // Start servos and intake, keep them running continuously
-                    servos.setPower(1.0);
-                    intake.setPower(1.0);
-                    waitingForDrop = true;
-                    lastVelocity = Math.abs(flywheel.getVelocity()); // Set initial baseline
-                    shootingSubState = 3;
-                    return false;
-                case 3:
-                    double currentVelocity = Math.abs(flywheel.getVelocity());
-
-                    if (waitingForDrop) {
-                        // Update lastVelocity to track the peak before drop
-                        if (currentVelocity > lastVelocity) {
-                            lastVelocity = currentVelocity;
-                        }
-
-                        // Check if flywheel dropped significantly from last peak (ball was shot)
-                        if (currentVelocity < lastVelocity - 55) {
-                            ballsShot++;
-                            waitingForDrop = false; // Don't count same drop twice
-                        }
-                    } else {
-                        // Wait for flywheel to recover before detecting next drop
-                        if (currentVelocity > lastVelocity - 50) {
-                            waitingForDrop = true;
-                            lastVelocity = currentVelocity; // Reset baseline for next ball
-                        }
-                    }
-
-                    // Check if all 3 balls have been shot
-                    if (ballsShot >= 3) {
-                        // All balls shot, stop everything
-                        servos.setPower(0.0);
-                        rotateFlywheel(0);
-                        shootingSubState = 0;
-                        return true;
-                    }
-                    return false;
-                default:
-                    return true;
-            }
-        }*/
 
         /** Rotates flywheel **/
         private void rotateFlywheel(double speed) {
