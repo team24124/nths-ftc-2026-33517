@@ -1,3 +1,5 @@
+*This repository is now deprecated and is no longer being actively maintianed*
+
 # IMPORTANT FOR CONTRIBUTORS/PROGRAMMERS!
 Programmers on this team MUST follow the Standard Operating Procedure for making changes to the code in this repository. They can view this in their respective team document.
 
