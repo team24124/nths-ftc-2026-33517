@@ -58,8 +58,8 @@
                 ballsCapture = new Pose(131, 83, Math.toRadians(0));
                 ballsPose2 = new Pose(98, 59, Math.toRadians(0));
                 ballsCapture2 = new Pose(143, 59, Math.toRadians(0));
-                ballsPose3 = new Pose(96, 35, Math.toRadians(0));
-                ballsCapture3 = new Pose(139, 35, Math.toRadians(0));
+                ballsPose3 = new Pose(96, 36, Math.toRadians(0));
+                ballsCapture3 = new Pose(139, 36, Math.toRadians(0));
                 smallLaunch = new Pose(84, 12, Math.toRadians(70));
                 middleBalls = new Pose(111, 60, Math.toRadians(0));
                 leverHit = new Pose(138, 61, Math.toRadians(90));
@@ -70,8 +70,8 @@
                 ballsCapture = new Pose(13, 83, Math.toRadians(180));
                 ballsPose2 = new Pose(46, 59, Math.toRadians(180));
                 ballsCapture2 = new Pose(1, 59, Math.toRadians(180));
-                ballsPose3 = new Pose(48, 35, Math.toRadians(180));
-                ballsCapture3 = new Pose(5, 35, Math.toRadians(180));
+                ballsPose3 = new Pose(48, 36, Math.toRadians(180));
+                ballsCapture3 = new Pose(5, 36, Math.toRadians(180));
                 smallLaunch = new Pose(60, 12, Math.toRadians(110));
                 middleBalls = new Pose(33, 60, Math.toRadians(180));
                 leverHit = new Pose(6, 61, Math.toRadians(90));
